@@ -6,7 +6,10 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import yt_dlp
+from PIL import Image, ImageTk
+from src.translations import get_text
 
+#TODO : fusionner les refresh_ui et autres pour n'avoir qu'1 seule fonction de traduction
 
 class VideoInfo:
     def __init__(self, url):
@@ -305,15 +308,27 @@ class YouTubeDownloader(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("YouTube Downloader")
-        self.geometry("800x600")
+        # Langue par défaut
+        self.current_language = "fr"  # ou "en" selon votre préférence
+
+        # Langues disponibles avec leurs noms d'affichage
+        self.available_languages = {
+            "fr": "Français",
+            "en": "English",
+            "es": "Español",
+            "it": "Italiano",
+            "de": "Deutsch"
+        }
+
+        self.title(get_text("app_title", self.current_language))
+        self.geometry("800x700")
 
         # Configuration du thème
         ctk.set_appearance_mode("System")  # Modes: "System", "Dark", "Light"
         ctk.set_default_color_theme("blue")  # Thèmes: "blue", "green", "dark-blue"
 
         # Dossier de sortie par défaut
-        self.output_path = os.path.join(os.path.expanduser("~"), "Downloads")
+        self.output_path = os.path.join(os.path.expanduser("~"), "Téléchargements")
 
         # Variables pour stocker les threads actifs
         self.info_thread = None
@@ -326,14 +341,254 @@ class YouTubeDownloader(ctk.CTk):
         # Création de l'interface
         self.setup_ui()
 
-    def setup_ui(self):
-        # Création des onglets
+    def change_language(self, selected_language_name):
+        """Change la langue en fonction du nom sélectionné"""
+        # Trouver le code de langue correspondant au nom
+        for lang_code, lang_name in self.available_languages.items():
+            if lang_name == selected_language_name:
+                if self.current_language != lang_code:
+                    self.current_language = lang_code
+                    self.refresh_ui()
+                break
+
+    def refresh_ui(self):
+        """Actualise tous les textes de l'interface"""
+        # Titre de la fenêtre
+        self.title(get_text("app_title", self.current_language))
+
+        # Rafraîchir l'en-tête
+        self.title_label_main.configure(text=get_text("app_title", self.current_language))
+        self.subtitle_label_main.configure(text=get_text("app_subtitle", self.current_language))
+
+        # Mettre à jour le sélecteur de langue
+        current_lang_name = self.available_languages[self.current_language]
+        self.language_combo.set(current_lang_name)
+
+        # SOLUTION : Recréer les onglets au lieu de modifier leur texte
+        self.recreate_tabs()
+
+    def recreate_tabs(self):
+        """Recrée les onglets avec les nouveaux textes"""
+        # Sauvegarder l'onglet actuellement sélectionné
+        current_tab = self.tabview.get()
+
+        # Détruire le tabview existant
+        self.tabview.destroy()
+
+        # Recréer le tabview avec les nouveaux textes
         self.tabview = ctk.CTkTabview(self)
         self.tabview.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Création des onglets
-        self.tab_single = self.tabview.add("Téléchargement unique")
-        self.tab_batch = self.tabview.add("Téléchargement par lot")
+        # Recréer les onglets avec les nouveaux noms
+        self.tab_single = self.tabview.add(get_text("single_download_tab", self.current_language))
+        self.tab_batch = self.tabview.add(get_text("batch_download_tab", self.current_language))
+
+        # Recréer le contenu des onglets
+        self.setup_single_download_tab()
+        self.setup_batch_download_tab()
+
+        # Restaurer l'onglet sélectionné si possible
+        try:
+            if current_tab == get_text("single_download_tab", "fr") or current_tab == get_text("single_download_tab",
+                                                                                               "en"):
+                self.tabview.set(get_text("single_download_tab", self.current_language))
+            elif current_tab == get_text("batch_download_tab", "fr") or current_tab == get_text("batch_download_tab",
+                                                                                                "en"):
+                self.tabview.set(get_text("batch_download_tab", self.current_language))
+        except:
+            # Si on ne peut pas restaurer, garder le premier onglet sélectionné
+            pass
+
+    def refresh_single_tab_texts(self):
+        """Met à jour les textes de l'onglet de téléchargement unique"""
+        # Labels et boutons
+        self.url_label.configure(text=get_text("youtube_url", self.current_language))
+        self.url_input.configure(placeholder_text=get_text("url_placeholder", self.current_language))
+        self.check_url_btn.configure(text=get_text("check_button", self.current_language))
+
+        # Titre vidéo (maintenir le titre actuel s'il existe)
+        current_title = self.title_label.cget("text")
+        if current_title and not current_title.startswith(get_text("title_prefix", "fr")):
+            # Extraire le titre de la vidéo du texte actuel
+            for lang in self.available_languages.keys():
+                prefix = get_text("title_prefix", lang)
+                if current_title.startswith(prefix):
+                    video_title = current_title[len(prefix):]
+                    self.title_label.configure(text=get_text("title_prefix", self.current_language) + video_title)
+                    break
+        elif not current_title or current_title == get_text("title_prefix", "fr"):
+            self.title_label.configure(text=get_text("title_prefix", self.current_language))
+
+        # Type de téléchargement
+        self.type_label.configure(text=get_text("type_label", self.current_language))
+        self.video_radio.configure(text=get_text("video_option", self.current_language))
+        self.audio_radio.configure(text=get_text("audio_only_option", self.current_language))
+
+        # Résolution
+        self.resolution_label.configure(text=get_text("resolution_label", self.current_language))
+        current_res_values = self.resolution_combo.cget("values")
+        if not current_res_values or current_res_values == [get_text("choose_resolution", "fr")]:
+            self.resolution_combo.configure(values=[get_text("choose_resolution", self.current_language)])
+            self.resolution_combo.set(get_text("choose_resolution", self.current_language))
+
+        # Bitrate audio
+        self.bitrate_label.configure(text=get_text("audio_bitrate_label", self.current_language))
+
+        # Dossier de sortie
+        self.output_label.configure(text=get_text("output_folder_label", self.current_language))
+        self.browse_btn.configure(text=get_text("browse_button", self.current_language))
+
+        # Boutons
+        self.download_btn.configure(text=get_text("download_button", self.current_language))
+        self.cancel_btn.configure(text=get_text("cancel_button", self.current_language))
+
+        # Status (maintenir le status actuel s'il n'est pas "Prêt")
+        current_status = self.status_label.cget("text")
+        if current_status == get_text("ready_status", "fr") or current_status == get_text("ready_status", "en"):
+            self.status_label.configure(text=get_text("ready_status", self.current_language))
+
+    def refresh_batch_tab_texts(self):
+        """Met à jour les textes de l'onglet de téléchargement par lot"""
+        # Labels et boutons
+        self.urls_label.configure(text=get_text("urls_list_label", self.current_language))
+
+        # Type de téléchargement
+        self.batch_type_label.configure(text=get_text("type_label", self.current_language))
+        self.batch_video_radio.configure(text=get_text("video_option", self.current_language))
+        self.batch_audio_radio.configure(text=get_text("audio_only_option", self.current_language))
+
+        # Résolution
+        self.batch_resolution_label.configure(text=get_text("resolution_label", self.current_language))
+
+        # Bitrate audio
+        self.batch_bitrate_label.configure(text=get_text("audio_bitrate_label", self.current_language))
+
+        # Dossier de sortie
+        self.batch_output_label.configure(text=get_text("output_folder_label", self.current_language))
+        self.batch_browse_btn.configure(text=get_text("browse_button", self.current_language))
+
+        # Boutons
+        self.load_file_btn.configure(text=get_text("load_from_file_button", self.current_language))
+        self.batch_download_btn.configure(text=get_text("download_button", self.current_language))
+        self.batch_cancel_btn.configure(text=get_text("cancel_button", self.current_language))
+
+        # Status (maintenir le status actuel s'il n'est pas "Prêt")
+        current_status = self.batch_status_label.cget("text")
+        if current_status == get_text("ready_status", "fr") or current_status == get_text("ready_status", "en"):
+            self.batch_status_label.configure(text=get_text("ready_status", self.current_language))
+
+    def load_custom_font(self):
+        """Charge la police personnalisée avec CustomTkinter FontManager"""
+        try:
+            font_path = "/media/richard/PROGRAMMATION/Projets/Ultimate-GUI-YouTube-Downloader-yt-dlp-CtK/YouTube-DL/fonts/TradeGothic Bold.ttf"
+            if os.path.exists(font_path):
+                # Charger la police avec CustomTkinter FontManager
+                ctk.FontManager.load_font(font_path)
+                return ctk.CTkFont(family="TradeGothic", size=28, weight="bold")
+            else:
+                # Police de fallback si le fichier n'existe pas
+                return ctk.CTkFont(family="Arial", size=28, weight="bold")
+        except Exception as e:
+            print(f"Erreur lors du chargement de la police: {e}")
+            # Police de fallback en cas d'erreur
+            return ctk.CTkFont(family="Arial", size=28, weight="bold")
+
+    def load_logo_image(self):
+        """Charge et redimensionne l'image du logo"""
+        try:
+            logo_path = "/media/richard/PROGRAMMATION/Projets/Ultimate-GUI-YouTube-Downloader-yt-dlp-CtK/YouTube-DL/assets/Youtube_logo.png"
+            if os.path.exists(logo_path):
+                # Charger l'image avec PIL
+                pil_image = Image.open(logo_path)
+                # Redimensionner l'image (ajustez la taille selon vos besoins)
+                pil_image = pil_image.resize((80, 60), Image.Resampling.LANCZOS)
+                # Convertir en CTkImage
+                return ctk.CTkImage(light_image=pil_image, dark_image=pil_image, size=(80, 60))
+            else:
+                return None
+        except Exception as e:
+            print(f"Erreur lors du chargement du logo: {e}")
+            return None
+
+    def setup_ui(self):
+        # En-tête
+        self.setup_header()
+
+        # Zone principale avec onglets
+        self.setup_tabs()
+
+    def setup_header(self):
+        """Crée l'en-tête avec logo, titre et sous-titre"""
+        # Frame principal pour l'en-tête
+        header_frame = ctk.CTkFrame(self, height=120)
+        header_frame.pack(fill="x", padx=10, pady=(10, 0))
+        header_frame.pack_propagate(False)  # Maintient la hauteur fixe
+
+        # Charger le logo
+        logo_image = self.load_logo_image()
+
+        # Frame pour le sélecteur de langue (à gauche)
+        language_frame = ctk.CTkFrame(header_frame, width=140)
+        language_frame.pack(side="left", padx=10, pady=10)
+        language_frame.pack_propagate(False)
+
+        # Label pour le sélecteur de langue
+        language_label = ctk.CTkLabel(language_frame, text="🌐", font=ctk.CTkFont(size=16))
+        language_label.pack(pady=(5, 0))
+
+        # Sélecteur de langue
+        language_values = list(self.available_languages.values())
+        current_lang_name = self.available_languages[self.current_language]
+
+        self.language_combo = ctk.CTkComboBox(
+            master=language_frame,
+            values=language_values,
+            command=self.change_language,
+            width=120,
+            height=28
+        )
+        self.language_combo.set(current_lang_name)
+        self.language_combo.pack(pady=(0, 5))
+
+        # Frame pour le logo (à droite)
+        if logo_image:
+            logo_frame = ctk.CTkFrame(header_frame, width=100, height=100)
+            logo_frame.pack(side="right", padx=10, pady=10)
+            logo_frame.pack_propagate(False)
+
+            logo_label = ctk.CTkLabel(logo_frame, image=logo_image, text="")
+            logo_label.pack(expand=True)
+
+        # Frame pour le titre et sous-titre (au centre)
+        title_frame = ctk.CTkFrame(header_frame)
+        title_frame.pack(expand=True, fill="both", padx=10, pady=10)
+
+        # Titre principal
+        title_font = self.load_custom_font()
+        self.title_label_main = ctk.CTkLabel(
+            title_frame,
+            text=get_text("app_title", self.current_language),
+            font=title_font,
+            text_color=("#1f538d", "#14375e"),  # Couleur bleue adaptée au thème
+            pady=5
+        )
+        self.title_label_main.pack(expand=True, pady=(0, 0))
+
+        # Sous-titre
+        self.subtitle_label_main = ctk.CTkLabel(
+            title_frame,
+            text=get_text("app_subtitle", self.current_language),
+            font=ctk.CTkFont(family="Arial", size=14, slant="italic"),
+            text_color=("#666666", "#999999")  # Couleur plus subtile
+        )
+        self.subtitle_label_main.pack(expand=True, pady=(0, 0))
+
+    def setup_tabs(self):
+        self.tabview = ctk.CTkTabview(self)
+        self.tabview.pack(fill="both", expand=True, padx=10, pady=10)
+
+        self.tab_single = self.tabview.add(get_text("single_download_tab", self.current_language))
+        self.tab_batch = self.tabview.add(get_text("batch_download_tab", self.current_language))
 
         self.setup_single_download_tab()
         self.setup_batch_download_tab()
@@ -343,98 +598,78 @@ class YouTubeDownloader(ctk.CTk):
         url_frame = ctk.CTkFrame(self.tab_single)
         url_frame.pack(fill="x", padx=10, pady=(10, 5))
 
-        ctk.CTkLabel(url_frame, text="URL YouTube:").pack(side="left", padx=5)
-        self.url_input = ctk.CTkEntry(url_frame, width=400, placeholder_text="Collez l'URL YouTube ici")
+        self.url_label = ctk.CTkLabel(url_frame, text=get_text("youtube_url", self.current_language))
+        self.url_label.pack(side="left", padx=5)
+
+        self.url_input = ctk.CTkEntry(url_frame, width=400,
+                                      placeholder_text=get_text("url_placeholder", self.current_language))
         self.url_input.pack(side="left", padx=5, fill="x", expand=True)
 
-        self.check_url_btn = ctk.CTkButton(url_frame, text="Vérifier", command=self.check_url)
+        self.check_url_btn = ctk.CTkButton(url_frame, text=get_text("check_button", self.current_language),
+                                           command=self.check_url)
         self.check_url_btn.pack(side="left", padx=5)
 
         # Titre de la vidéo
         title_frame = ctk.CTkFrame(self.tab_single)
         title_frame.pack(fill="x", padx=10, pady=5)
 
-        self.title_label = ctk.CTkLabel(title_frame, text="Titre: ", wraplength=700)
+        self.title_label = ctk.CTkLabel(title_frame, text=get_text("title_prefix", self.current_language),
+                                        wraplength=700)
         self.title_label.pack(fill="x", padx=10, pady=5)
 
         # Type de téléchargement (vidéo/audio)
         type_frame = ctk.CTkFrame(self.tab_single)
         type_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(type_frame, text="Type:").pack(side="left", padx=5)
+        self.type_label = ctk.CTkLabel(type_frame, text=get_text("type_label", self.current_language))
+        self.type_label.pack(side="left", padx=5)
 
         self.download_type_var = tk.StringVar(value="video")
-        self.video_radio = ctk.CTkRadioButton(type_frame, text="Vidéo", variable=self.download_type_var, value="video", command=self.toggle_resolution_options)
+        self.video_radio = ctk.CTkRadioButton(type_frame, text=get_text("video_option", self.current_language),
+                                              variable=self.download_type_var, value="video",
+                                              command=self.toggle_resolution_options)
         self.video_radio.pack(side="left", padx=10)
 
-        self.audio_radio = ctk.CTkRadioButton(type_frame, text="Audio uniquement", variable=self.download_type_var, value="audio", command=self.toggle_resolution_options)
+        self.audio_radio = ctk.CTkRadioButton(type_frame, text=get_text("audio_only_option", self.current_language),
+                                              variable=self.download_type_var, value="audio",
+                                              command=self.toggle_resolution_options)
         self.audio_radio.pack(side="left", padx=10)
 
         # Résolution (pour les vidéos)
         res_frame = ctk.CTkFrame(self.tab_single)
         res_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(res_frame, text="Résolution:").pack(side="left", padx=5)
+        self.resolution_label = ctk.CTkLabel(res_frame, text=get_text("resolution_label", self.current_language))
+        self.resolution_label.pack(side="left", padx=5)
 
         self.resolution_var = tk.StringVar()
-        self.resolution_combo = ctk.CTkComboBox(res_frame, variable=self.resolution_var, values=["Choisir une résolution"])
+        self.resolution_combo = ctk.CTkComboBox(res_frame, variable=self.resolution_var,
+                                                values=[get_text("choose_resolution", self.current_language)])
         self.resolution_combo.pack(side="left", padx=5)
 
         # Bitrate audio
         bitrate_frame = ctk.CTkFrame(self.tab_single)
         bitrate_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(bitrate_frame, text="Bitrate audio:").pack(side="left", padx=5)
+        self.bitrate_label = ctk.CTkLabel(bitrate_frame, text=get_text("audio_bitrate_label", self.current_language))
+        self.bitrate_label.pack(side="left", padx=5)
 
         self.bitrate_var = tk.StringVar(value="Auto")
         self.bitrate_combo = ctk.CTkComboBox(bitrate_frame, variable=self.bitrate_var,
-                                            values=["Auto", "320 kbps", "256 kbps", "192 kbps", "128 kbps", "96 kbps", "64 kbps"])
+                                             values=["Auto", "320 kbps", "256 kbps", "192 kbps", "128 kbps", "96 kbps",
+                                                     "64 kbps"])
         self.bitrate_combo.pack(side="left", padx=5)
 
-        # Dossier de sortie
-        output_frame = ctk.CTkFrame(self.tab_single)
-        output_frame.pack(fill="x", padx=10, pady=5)
-
-        ctk.CTkLabel(output_frame, text="Dossier de sortie:").pack(side="left", padx=5)
-
-        self.output_path_var = tk.StringVar(value=self.output_path)
-        self.output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.output_path_var, width=350)
-        self.output_path_entry.pack(side="left", padx=5, fill="x", expand=True)
-
-        browse_btn = ctk.CTkButton(output_frame, text="Parcourir", command=self.select_output_folder)
-        browse_btn.pack(side="left", padx=5)
-
-        # Boutons Télécharger et Annuler
-        buttons_frame = ctk.CTkFrame(self.tab_single)
-        buttons_frame.pack(fill="x", padx=10, pady=5)
-
-        self.download_btn = ctk.CTkButton(buttons_frame, text="Télécharger", command=self.start_download, state="disabled")
-        self.download_btn.pack(side="left", padx=5)
-
-        self.cancel_btn = ctk.CTkButton(buttons_frame, text="Annuler", command=self.cancel_download, state="disabled")
-        self.cancel_btn.pack(side="left", padx=5)
-
-        # Barre de progression
-        progress_frame = ctk.CTkFrame(self.tab_single)
-        progress_frame.pack(fill="x", padx=10, pady=5)
-
-        self.progress_bar = ctk.CTkProgressBar(progress_frame)
-        self.progress_bar.pack(fill="x", padx=10, pady=5)
-        self.progress_bar.set(0)
-
-        # Status
-        status_frame = ctk.CTkFrame(self.tab_single)
-        status_frame.pack(fill="x", padx=10, pady=5)
-
-        self.status_label = ctk.CTkLabel(status_frame, text="Prêt")
-        self.status_label.pack(fill="x", padx=10, pady=5)
+        # Éléments communs (dossier de sortie, boutons, progression, status)
+        self.setup_download_controls(self.tab_single, "single")
 
     def setup_batch_download_tab(self):
         # Zone de texte pour les URLs
         urls_frame = ctk.CTkFrame(self.tab_batch)
         urls_frame.pack(fill="x", padx=10, pady=(10, 5))
 
-        ctk.CTkLabel(urls_frame, text="Liste des URLs YouTube (une par ligne):").pack(anchor="w", padx=5, pady=5)
+        self.urls_label = ctk.CTkLabel(urls_frame, text=get_text("urls_list_label", self.current_language))
+        self.urls_label.pack(anchor="w", padx=5, pady=5)
 
         self.urls_text = ctk.CTkTextbox(urls_frame, height=150)
         self.urls_text.pack(fill="both", expand=True, padx=5, pady=5)
@@ -443,89 +678,162 @@ class YouTubeDownloader(ctk.CTk):
         type_frame = ctk.CTkFrame(self.tab_batch)
         type_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(type_frame, text="Type:").pack(side="left", padx=5)
+        self.batch_type_label = ctk.CTkLabel(type_frame, text=get_text("type_label", self.current_language))
+        self.batch_type_label.pack(side="left", padx=5)
 
         self.batch_download_type_var = tk.StringVar(value="video")
-        self.batch_video_radio = ctk.CTkRadioButton(type_frame, text="Vidéo", variable=self.batch_download_type_var, value="video", command=self.toggle_batch_resolution_options)
+        self.batch_video_radio = ctk.CTkRadioButton(type_frame, text=get_text("video_option", self.current_language),
+                                                    variable=self.batch_download_type_var, value="video",
+                                                    command=self.toggle_batch_resolution_options)
         self.batch_video_radio.pack(side="left", padx=10)
 
-        self.batch_audio_radio = ctk.CTkRadioButton(type_frame, text="Audio uniquement", variable=self.batch_download_type_var, value="audio", command=self.toggle_batch_resolution_options)
+        self.batch_audio_radio = ctk.CTkRadioButton(type_frame,
+                                                    text=get_text("audio_only_option", self.current_language),
+                                                    variable=self.batch_download_type_var, value="audio",
+                                                    command=self.toggle_batch_resolution_options)
         self.batch_audio_radio.pack(side="left", padx=10)
 
         # Résolution (pour les vidéos)
         res_frame = ctk.CTkFrame(self.tab_batch)
         res_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(res_frame, text="Résolution:").pack(side="left", padx=5)
+        self.batch_resolution_label = ctk.CTkLabel(res_frame, text=get_text("resolution_label", self.current_language))
+        self.batch_resolution_label.pack(side="left", padx=5)
 
         self.batch_resolution_var = tk.StringVar(value="720p")
         self.batch_resolution_combo = ctk.CTkComboBox(res_frame, variable=self.batch_resolution_var,
-                                                   values=["1080p", "720p", "480p", "360p", "240p", "144p"])
+                                                      values=["1080p", "720p", "480p", "360p", "240p", "144p"])
         self.batch_resolution_combo.pack(side="left", padx=5)
 
         # Bitrate audio
         bitrate_frame = ctk.CTkFrame(self.tab_batch)
         bitrate_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(bitrate_frame, text="Bitrate audio:").pack(side="left", padx=5)
+        self.batch_bitrate_label = ctk.CTkLabel(bitrate_frame,
+                                                text=get_text("audio_bitrate_label", self.current_language))
+        self.batch_bitrate_label.pack(side="left", padx=5)
 
         self.batch_bitrate_var = tk.StringVar(value="Auto")
         self.batch_bitrate_combo = ctk.CTkComboBox(bitrate_frame, variable=self.batch_bitrate_var,
-                                                  values=["Auto", "320 kbps", "256 kbps", "192 kbps", "128 kbps", "96 kbps", "64 kbps"])
+                                                   values=["Auto", "320 kbps", "256 kbps", "192 kbps", "128 kbps",
+                                                           "96 kbps", "64 kbps"])
         self.batch_bitrate_combo.pack(side="left", padx=5)
 
         # Chargement depuis un fichier
         file_frame = ctk.CTkFrame(self.tab_batch)
         file_frame.pack(fill="x", padx=10, pady=5)
 
-        self.load_file_btn = ctk.CTkButton(file_frame, text="Charger une liste depuis un fichier", command=self.load_urls_from_file)
+        self.load_file_btn = ctk.CTkButton(file_frame, text=get_text("load_from_file_button", self.current_language),
+                                           command=self.load_urls_from_file)
         self.load_file_btn.pack(side="left", padx=5)
 
+        # Éléments communs (dossier de sortie, boutons, progression, status)
+        self.setup_download_controls(self.tab_batch, "batch")
+
+    def setup_download_controls(self, parent_tab, tab_type):
+        """
+        Crée les éléments communs aux deux onglets : dossier de sortie, boutons, progression et status
+
+        Args:
+            parent_tab: L'onglet parent (self.tab_single ou self.tab_batch)
+            tab_type: "single" ou "batch" pour différencier les variables et commandes
+        """
+
         # Dossier de sortie
-        output_frame = ctk.CTkFrame(self.tab_batch)
+        output_frame = ctk.CTkFrame(parent_tab)
         output_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(output_frame, text="Dossier de sortie:").pack(side="left", padx=5)
+        if tab_type == "single":
+            self.output_label = ctk.CTkLabel(output_frame, text=get_text("output_folder_label", self.current_language))
+            self.output_label.pack(side="left", padx=5)
 
-        self.batch_output_path_var = tk.StringVar(value=self.output_path)
-        self.batch_output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.batch_output_path_var, width=350)
-        self.batch_output_path_entry.pack(side="left", padx=5, fill="x", expand=True)
+            self.output_path_var = tk.StringVar(value=self.output_path)
+            self.output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.output_path_var, width=350)
+            browse_command = self.select_output_folder
 
-        batch_browse_btn = ctk.CTkButton(output_frame, text="Parcourir", command=self.select_batch_output_folder)
-        batch_browse_btn.pack(side="left", padx=5)
+            self.browse_btn = ctk.CTkButton(output_frame, text=get_text("browse_button", self.current_language),
+                                            command=browse_command)
+        else:  # batch
+            self.batch_output_label = ctk.CTkLabel(output_frame,
+                                                   text=get_text("output_folder_label", self.current_language))
+            self.batch_output_label.pack(side="left", padx=5)
+
+            self.batch_output_path_var = tk.StringVar(value=self.output_path)
+            self.output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.batch_output_path_var, width=350)
+            browse_command = self.select_batch_output_folder
+
+            self.batch_browse_btn = ctk.CTkButton(output_frame, text=get_text("browse_button", self.current_language),
+                                                  command=browse_command)
+
+        self.output_path_entry.pack(side="left", padx=5, fill="x", expand=True)
+
+        if tab_type == "single":
+            self.browse_btn.pack(side="left", padx=5)
+        else:
+            self.batch_browse_btn.pack(side="left", padx=5)
 
         # Boutons Télécharger et Annuler
-        buttons_frame = ctk.CTkFrame(self.tab_batch)
+        buttons_frame = ctk.CTkFrame(parent_tab)
         buttons_frame.pack(fill="x", padx=10, pady=5)
 
-        self.batch_download_btn = ctk.CTkButton(buttons_frame, text="Télécharger par lot", command=self.start_batch_download)
-        self.batch_download_btn.pack(side="left", padx=5)
+        if tab_type == "single":
+            download_text = get_text("download_button", self.current_language)
+            download_command = self.start_download
+            cancel_command = self.cancel_download
+            download_state = "disabled"
 
-        self.batch_cancel_btn = ctk.CTkButton(buttons_frame, text="Annuler", command=self.cancel_batch_download, state="disabled")
-        self.batch_cancel_btn.pack(side="left", padx=5)
+            self.download_btn = ctk.CTkButton(buttons_frame, text=download_text,
+                                              command=download_command, state=download_state)
+            self.download_btn.pack(side="left", padx=5)
+
+            self.cancel_btn = ctk.CTkButton(buttons_frame, text=get_text("cancel_button", self.current_language),
+                                            command=cancel_command, state="disabled")
+            self.cancel_btn.pack(side="left", padx=5)
+
+        else:  # batch
+            download_text = get_text("download_button", self.current_language)
+            download_command = self.start_batch_download
+            cancel_command = self.cancel_batch_download
+
+            self.batch_download_btn = ctk.CTkButton(buttons_frame, text=download_text,
+                                                    command=download_command)
+            self.batch_download_btn.pack(side="left", padx=5)
+
+            self.batch_cancel_btn = ctk.CTkButton(buttons_frame, text=get_text("cancel_button", self.current_language),
+                                                  command=cancel_command, state="disabled")
+            self.batch_cancel_btn.pack(side="left", padx=5)
 
         # Barre de progression
-        progress_frame = ctk.CTkFrame(self.tab_batch)
+        progress_frame = ctk.CTkFrame(parent_tab)
         progress_frame.pack(fill="x", padx=10, pady=5)
 
-        self.batch_progress_bar = ctk.CTkProgressBar(progress_frame)
-        self.batch_progress_bar.pack(fill="x", padx=10, pady=5)
-        self.batch_progress_bar.set(0)
+        if tab_type == "single":
+            self.progress_bar = ctk.CTkProgressBar(progress_frame)
+            self.progress_bar.pack(fill="x", padx=10, pady=5)
+            self.progress_bar.set(0)
+        else:  # batch
+            self.batch_progress_bar = ctk.CTkProgressBar(progress_frame)
+            self.batch_progress_bar.pack(fill="x", padx=10, pady=5)
+            self.batch_progress_bar.set(0)
 
         # Status
-        status_frame = ctk.CTkFrame(self.tab_batch)
+        status_frame = ctk.CTkFrame(parent_tab)
         status_frame.pack(fill="x", padx=10, pady=5)
 
-        self.batch_status_label = ctk.CTkLabel(status_frame, text="Prêt")
-        self.batch_status_label.pack(fill="x", padx=10, pady=5)
+        if tab_type == "single":
+            self.status_label = ctk.CTkLabel(status_frame, text=get_text("ready_status", self.current_language))
+            self.status_label.pack(fill="x", padx=10, pady=5)
+        else:  # batch
+            self.batch_status_label = ctk.CTkLabel(status_frame, text=get_text("ready_status", self.current_language))
+            self.batch_status_label.pack(fill="x", padx=10, pady=5)
 
     def check_url(self):
         url = self.url_input.get().strip()
         if not url:
-            self.status_label.configure(text="Veuillez entrer une URL valide")
+            self.status_label.configure(text=get_text("enter_valid_url", self.current_language))
             return
 
-        self.status_label.configure(text="Vérification de l'URL...")
+        self.status_label.configure(text=get_text("checking_url", self.current_language))
         self.check_url_btn.configure(state="disabled")
 
         # Démarrer le thread de vérification
@@ -537,9 +845,10 @@ class YouTubeDownloader(ctk.CTk):
         self.info_thread.daemon = True
         self.info_thread.start()
 
+
     def on_info_received(self, video_info):
         self.current_video_info = video_info
-        self.title_label.configure(text=f"Titre: {video_info.title}")
+        self.title_label.configure(text=f"{get_text('title_prefix', self.current_language)}{video_info.title}")
 
         # Mise à jour du combobox de résolution
         if video_info.resolutions:
@@ -561,9 +870,10 @@ class YouTubeDownloader(ctk.CTk):
         self.bitrate_combo.configure(values=bitrates)
         self.bitrate_combo.set("Auto")
 
-        self.status_label.configure(text=f"Vidéo trouvée: {video_info.title}")
+        self.status_label.configure(text=f"{get_text('video_found', self.current_language)}{video_info.title}")
         self.download_btn.configure(state="normal")
         self.check_url_btn.configure(state="normal")
+
 
     def on_info_error(self, error_message):
         self.status_label.configure(text=f"Erreur: {error_message}")
@@ -606,6 +916,7 @@ class YouTubeDownloader(ctk.CTk):
         resolution = ""
         if download_type == "video":
             resolution = self.resolution_var.get()
+            # En fait les lignes suivantes ne servent pas car le bouton de téléchargement est grisé par défaut
             if not resolution or resolution == "Choisir une résolution":
                 self.status_label.configure(text="Veuillez sélectionner une résolution")
                 return
