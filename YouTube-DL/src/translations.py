@@ -7,11 +7,11 @@ TRANSLATIONS = {
         # En-tête
         "app_title": "Ultimate GUI YouTube Downloader",
         "app_subtitle": "Une interface graphique pour yt-dlp",
-        
+
         # Onglets
         "single_download_tab": "Téléchargement unique",
         "batch_download_tab": "Téléchargement par lot",
-        
+
         # Interface principale
         "youtube_url": "URL YouTube:",
         "url_placeholder": "Collez l'URL YouTube ici",
@@ -22,18 +22,19 @@ TRANSLATIONS = {
         "audio_only_option": "Audio uniquement",
         "resolution_label": "Résolution:",
         "choose_resolution": "Choisir une résolution",
+        "download_folder": "Téléchargement",
         "audio_bitrate_label": "Bitrate audio:",
         "output_folder_label": "Dossier de sortie:",
         "browse_button": "Parcourir",
         "download_button": "Télécharger",
         "cancel_button": "Annuler",
         "ready_status": "Prêt",
-        
+
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",
         "load_from_file_button": "Charger une liste depuis un fichier",
         "batch_download_button": "Télécharger par lot",
-        
+
         # Messages d'état
         "enter_valid_url": "Veuillez entrer une URL valide",
         "checking_url": "Vérification de l'URL...",
@@ -44,7 +45,7 @@ TRANSLATIONS = {
         "add_at_least_one_url": "Veuillez ajouter au moins une URL",
         "no_valid_urls": "Aucune URL valide trouvée",
         "canceling_batch_download": "Annulation du téléchargement par lot...",
-        
+
         # Messages de dialogue
         "download_complete": "Téléchargement terminé",
         "download_complete_message": "Le téléchargement a été complété avec succès!",
@@ -55,21 +56,21 @@ TRANSLATIONS = {
         "text_files": "Fichiers texte",
         "loaded_urls": "Chargé {count} URLs depuis le fichier",
         "file_load_error": "Erreur lors du chargement du fichier: {error}",
-        
+
         # Bouton de langue
         "language_button": "🌐 FR",
         "language_tooltip": "Changer la langue"
     },
-    
+
     "en": {
         # Header
         "app_title": "Ultimate GUI YouTube Downloader",
         "app_subtitle": "A yt-dlp GUI",
-        
+
         # Tabs
         "single_download_tab": "Single Download",
         "batch_download_tab": "Batch Download",
-        
+
         # Main interface
         "youtube_url": "YouTube URL:",
         "url_placeholder": "Paste YouTube URL here",
@@ -80,18 +81,19 @@ TRANSLATIONS = {
         "audio_only_option": "Audio only",
         "resolution_label": "Resolution:",
         "choose_resolution": "Choose resolution",
+        "download_folder": "Downloads",
         "audio_bitrate_label": "Audio bitrate:",
         "output_folder_label": "Output folder:",
         "browse_button": "Browse",
         "download_button": "Download",
         "cancel_button": "Cancel",
         "ready_status": "Ready",
-        
+
         # Batch download
         "urls_list_label": "YouTube URLs list (one per line):",
         "load_from_file_button": "Load list from file",
         "batch_download_button": "Batch Download",
-        
+
         # Status messages
         "enter_valid_url": "Please enter a valid URL",
         "checking_url": "Checking URL...",
@@ -102,7 +104,7 @@ TRANSLATIONS = {
         "add_at_least_one_url": "Please add at least one URL",
         "no_valid_urls": "No valid URLs found",
         "canceling_batch_download": "Canceling batch download...",
-        
+
         # Dialog messages
         "download_complete": "Download Complete",
         "download_complete_message": "Download completed successfully!",
@@ -113,13 +115,13 @@ TRANSLATIONS = {
         "text_files": "Text files",
         "loaded_urls": "Loaded {count} URLs from file",
         "file_load_error": "Error loading file: {error}",
-        
+
         # Language button
         "language_button": "🌐 EN",
         "language_tooltip": "Change language"
     },
 
-     "es": {
+    "es": {
         # Encabezado
         "app_title": "Ultimate GUI YouTube Downloader",
         "app_subtitle": "Una interfaz gráfica para yt-dlp",
@@ -138,6 +140,7 @@ TRANSLATIONS = {
         "audio_only_option": "Solo audio",
         "resolution_label": "Resolución:",
         "choose_resolution": "Elegir resolución",
+        "download_folder": "Descargas",
         "audio_bitrate_label": "Bitrate de audio:",
         "output_folder_label": "Carpeta de destino:",
         "browse_button": "Explorar",
@@ -196,6 +199,7 @@ TRANSLATIONS = {
         "audio_only_option": "Solo audio",
         "resolution_label": "Risoluzione:",
         "choose_resolution": "Scegli risoluzione",
+        "download_folder": "Scaricati",
         "audio_bitrate_label": "Bitrate audio:",
         "output_folder_label": "Cartella di destinazione:",
         "browse_button": "Sfoglia",
@@ -254,6 +258,7 @@ TRANSLATIONS = {
         "audio_only_option": "Nur Audio",
         "resolution_label": "Auflösung:",
         "choose_resolution": "Auflösung wählen",
+        "download_folder": "Downloads",
         "audio_bitrate_label": "Audio-Bitrate:",
         "output_folder_label": "Zielordner:",
         "browse_button": "Durchsuchen",
@@ -294,15 +299,16 @@ TRANSLATIONS = {
     }
 }
 
+
 def get_text(key, lang="fr", **kwargs):
     """
     Récupère le texte traduit pour une clé donnée
-    
+
     Args:
         key: Clé de traduction
         lang: Langue (fr ou en)
         **kwargs: Arguments pour le formatage des chaînes
-    
+
     Returns:
         str: Texte traduit
     """

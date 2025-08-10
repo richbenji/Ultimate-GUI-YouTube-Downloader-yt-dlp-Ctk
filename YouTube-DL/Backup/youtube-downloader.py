@@ -364,74 +364,25 @@ class YouTubeDownloader(ctk.CTk):
         current_lang_name = self.available_languages[self.current_language]
         self.language_combo.set(current_lang_name)
 
-        # SOLUTION : Recréer les onglets au lieu de modifier leur texte
-        self.recreate_tabs()
 
-    def recreate_tabs(self):
-        """Recrée les onglets avec les nouveaux textes"""
-        # Sauvegarder l'onglet actuellement sélectionné
-        current_tab = self.tabview.get()
-
-        # Détruire le tabview existant
-        self.tabview.destroy()
-
-        # Recréer le tabview avec les nouveaux textes
-        self.tabview = ctk.CTkTabview(self)
-        self.tabview.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Recréer les onglets avec les nouveaux noms
-        self.tab_single = self.tabview.add(get_text("single_download_tab", self.current_language))
-        self.tab_batch = self.tabview.add(get_text("batch_download_tab", self.current_language))
-
-        # Recréer le contenu des onglets
-        self.setup_single_download_tab()
-        self.setup_batch_download_tab()
-
-        # Restaurer l'onglet sélectionné si possible
-        try:
-            if current_tab == get_text("single_download_tab", "fr") or current_tab == get_text("single_download_tab",
-                                                                                               "en"):
-                self.tabview.set(get_text("single_download_tab", self.current_language))
-            elif current_tab == get_text("batch_download_tab", "fr") or current_tab == get_text("batch_download_tab",
-                                                                                                "en"):
-                self.tabview.set(get_text("batch_download_tab", self.current_language))
-        except:
-            # Si on ne peut pas restaurer, garder le premier onglet sélectionné
-            pass
+        # Au lieu de recréer les onglets, mettre à jour seulement les textes des éléments
+        self.refresh_single_tab_texts()
+        self.refresh_batch_tab_texts()
 
     def refresh_single_tab_texts(self):
         """Met à jour les textes de l'onglet de téléchargement unique"""
-        # Labels et boutons
+        # URL et bouton vérifier
         self.url_label.configure(text=get_text("youtube_url", self.current_language))
         self.url_input.configure(placeholder_text=get_text("url_placeholder", self.current_language))
         self.check_url_btn.configure(text=get_text("check_button", self.current_language))
-
-        # Titre vidéo (maintenir le titre actuel s'il existe)
-        current_title = self.title_label.cget("text")
-        if current_title and not current_title.startswith(get_text("title_prefix", "fr")):
-            # Extraire le titre de la vidéo du texte actuel
-            for lang in self.available_languages.keys():
-                prefix = get_text("title_prefix", lang)
-                if current_title.startswith(prefix):
-                    video_title = current_title[len(prefix):]
-                    self.title_label.configure(text=get_text("title_prefix", self.current_language) + video_title)
-                    break
-        elif not current_title or current_title == get_text("title_prefix", "fr"):
-            self.title_label.configure(text=get_text("title_prefix", self.current_language))
 
         # Type de téléchargement
         self.type_label.configure(text=get_text("type_label", self.current_language))
         self.video_radio.configure(text=get_text("video_option", self.current_language))
         self.audio_radio.configure(text=get_text("audio_only_option", self.current_language))
 
-        # Résolution
+        # Résolution et bitrate
         self.resolution_label.configure(text=get_text("resolution_label", self.current_language))
-        current_res_values = self.resolution_combo.cget("values")
-        if not current_res_values or current_res_values == [get_text("choose_resolution", "fr")]:
-            self.resolution_combo.configure(values=[get_text("choose_resolution", self.current_language)])
-            self.resolution_combo.set(get_text("choose_resolution", self.current_language))
-
-        # Bitrate audio
         self.bitrate_label.configure(text=get_text("audio_bitrate_label", self.current_language))
 
         # Dossier de sortie
@@ -442,14 +393,15 @@ class YouTubeDownloader(ctk.CTk):
         self.download_btn.configure(text=get_text("download_button", self.current_language))
         self.cancel_btn.configure(text=get_text("cancel_button", self.current_language))
 
-        # Status (maintenir le status actuel s'il n'est pas "Prêt")
+        # Status (garder le status actuel s'il n'est pas un message par défaut)
         current_status = self.status_label.cget("text")
-        if current_status == get_text("ready_status", "fr") or current_status == get_text("ready_status", "en"):
+        default_statuses = ["Prêt", "Ready", "Listo", "Pronto", "Bereit"]
+        if current_status in default_statuses:
             self.status_label.configure(text=get_text("ready_status", self.current_language))
 
     def refresh_batch_tab_texts(self):
         """Met à jour les textes de l'onglet de téléchargement par lot"""
-        # Labels et boutons
+        # Liste des URLs
         self.urls_label.configure(text=get_text("urls_list_label", self.current_language))
 
         # Type de téléchargement
@@ -457,30 +409,27 @@ class YouTubeDownloader(ctk.CTk):
         self.batch_video_radio.configure(text=get_text("video_option", self.current_language))
         self.batch_audio_radio.configure(text=get_text("audio_only_option", self.current_language))
 
-        # Résolution
+        # Résolution et bitrate
         self.batch_resolution_label.configure(text=get_text("resolution_label", self.current_language))
-
-        # Bitrate audio
         self.batch_bitrate_label.configure(text=get_text("audio_bitrate_label", self.current_language))
-
-        # Dossier de sortie
-        self.batch_output_label.configure(text=get_text("output_folder_label", self.current_language))
-        self.batch_browse_btn.configure(text=get_text("browse_button", self.current_language))
 
         # Boutons
         self.load_file_btn.configure(text=get_text("load_from_file_button", self.current_language))
+        self.batch_output_label.configure(text=get_text("output_folder_label", self.current_language))
+        self.batch_browse_btn.configure(text=get_text("browse_button", self.current_language))
         self.batch_download_btn.configure(text=get_text("download_button", self.current_language))
         self.batch_cancel_btn.configure(text=get_text("cancel_button", self.current_language))
 
-        # Status (maintenir le status actuel s'il n'est pas "Prêt")
+        # Status (garder le status actuel s'il n'est pas un message par défaut)
         current_status = self.batch_status_label.cget("text")
-        if current_status == get_text("ready_status", "fr") or current_status == get_text("ready_status", "en"):
+        default_statuses = ["Prêt", "Ready", "Listo", "Pronto", "Bereit"]
+        if current_status in default_statuses:
             self.batch_status_label.configure(text=get_text("ready_status", self.current_language))
 
     def load_custom_font(self):
         """Charge la police personnalisée avec CustomTkinter FontManager"""
         try:
-            font_path = "/media/richard/PROGRAMMATION/Projets/Ultimate-GUI-YouTube-Downloader-yt-dlp-CtK/YouTube-DL/fonts/TradeGothic Bold.ttf"
+            font_path = "/YouTube-DL/fonts/TradeGothic Bold.ttf"
             if os.path.exists(font_path):
                 # Charger la police avec CustomTkinter FontManager
                 ctk.FontManager.load_font(font_path)
@@ -496,7 +445,7 @@ class YouTubeDownloader(ctk.CTk):
     def load_logo_image(self):
         """Charge et redimensionne l'image du logo"""
         try:
-            logo_path = "/media/richard/PROGRAMMATION/Projets/Ultimate-GUI-YouTube-Downloader-yt-dlp-CtK/YouTube-DL/assets/Youtube_logo.png"
+            logo_path = "/YouTube-DL/assets/Youtube_logo.png"
             if os.path.exists(logo_path):
                 # Charger l'image avec PIL
                 pil_image = Image.open(logo_path)
@@ -538,7 +487,7 @@ class YouTubeDownloader(ctk.CTk):
 
         # Sélecteur de langue
         language_values = list(self.available_languages.values())
-        current_lang_name = self.available_languages[self.current_language]
+        current_lang_name = self.available_languages[self.current_language]  #TODO : en double dans le code
 
         self.language_combo = ctk.CTkComboBox(
             master=language_frame,
@@ -547,7 +496,7 @@ class YouTubeDownloader(ctk.CTk):
             width=120,
             height=28
         )
-        self.language_combo.set(current_lang_name)
+        self.language_combo.set(current_lang_name)  #TODO : en double dans le code
         self.language_combo.pack(pady=(0, 5))
 
         # Frame pour le logo (à droite)
@@ -570,7 +519,7 @@ class YouTubeDownloader(ctk.CTk):
             text=get_text("app_title", self.current_language),
             font=title_font,
             text_color=("#1f538d", "#14375e"),  # Couleur bleue adaptée au thème
-            pady=5
+            pady = 5
         )
         self.title_label_main.pack(expand=True, pady=(0, 0))
 
@@ -743,6 +692,7 @@ class YouTubeDownloader(ctk.CTk):
         output_frame = ctk.CTkFrame(parent_tab)
         output_frame.pack(fill="x", padx=10, pady=5)
 
+        # Variables et widgets spécifiques selon le type d'onglet
         if tab_type == "single":
             self.output_label = ctk.CTkLabel(output_frame, text=get_text("output_folder_label", self.current_language))
             self.output_label.pack(side="left", padx=5)
@@ -750,26 +700,21 @@ class YouTubeDownloader(ctk.CTk):
             self.output_path_var = tk.StringVar(value=self.output_path)
             self.output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.output_path_var, width=350)
             browse_command = self.select_output_folder
-
-            self.browse_btn = ctk.CTkButton(output_frame, text=get_text("browse_button", self.current_language),
-                                            command=browse_command)
         else:  # batch
-            self.batch_output_label = ctk.CTkLabel(output_frame,
-                                                   text=get_text("output_folder_label", self.current_language))
+            self.batch_output_label = ctk.CTkLabel(output_frame, text=get_text("output_folder_label", self.current_language))
             self.batch_output_label.pack(side="left", padx=5)
 
             self.batch_output_path_var = tk.StringVar(value=self.output_path)
             self.output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.batch_output_path_var, width=350)
             browse_command = self.select_batch_output_folder
 
-            self.batch_browse_btn = ctk.CTkButton(output_frame, text=get_text("browse_button", self.current_language),
-                                                  command=browse_command)
-
         self.output_path_entry.pack(side="left", padx=5, fill="x", expand=True)
 
         if tab_type == "single":
+            self.browse_btn = ctk.CTkButton(output_frame, text=get_text("browse_button", self.current_language), command=browse_command)
             self.browse_btn.pack(side="left", padx=5)
         else:
+            self.batch_browse_btn = ctk.CTkButton(output_frame, text=get_text("browse_button", self.current_language), command=browse_command)
             self.batch_browse_btn.pack(side="left", padx=5)
 
         # Boutons Télécharger et Annuler
@@ -827,6 +772,7 @@ class YouTubeDownloader(ctk.CTk):
             self.batch_status_label = ctk.CTkLabel(status_frame, text=get_text("ready_status", self.current_language))
             self.batch_status_label.pack(fill="x", padx=10, pady=5)
 
+
     def check_url(self):
         url = self.url_input.get().strip()
         if not url:
@@ -844,7 +790,6 @@ class YouTubeDownloader(ctk.CTk):
         )
         self.info_thread.daemon = True
         self.info_thread.start()
-
 
     def on_info_received(self, video_info):
         self.current_video_info = video_info
@@ -874,11 +819,11 @@ class YouTubeDownloader(ctk.CTk):
         self.download_btn.configure(state="normal")
         self.check_url_btn.configure(state="normal")
 
-
     def on_info_error(self, error_message):
-        self.status_label.configure(text=f"Erreur: {error_message}")
+        self.status_label.configure(text=f"{get_text('error_prefix', self.current_language)}{error_message}")
         self.check_url_btn.configure(state="normal")
         self.download_btn.configure(state="disabled")
+
 
     def toggle_resolution_options(self):
         is_video = self.download_type_var.get() == "video"
@@ -895,14 +840,14 @@ class YouTubeDownloader(ctk.CTk):
             self.batch_resolution_combo.configure(state="normal")
 
     def select_output_folder(self):
-        folder = filedialog.askdirectory(title="Sélectionner un dossier de sortie")
+        folder = filedialog.askdirectory(title=get_text("select_output_folder", self.current_language))
         if folder:
             self.output_path = folder
             self.output_path_var.set(folder)
             self.batch_output_path_var.set(folder)  # Synchroniser entre les onglets
 
     def select_batch_output_folder(self):
-        folder = filedialog.askdirectory(title="Sélectionner un dossier de sortie")
+        folder = filedialog.askdirectory(title=get_text("select_output_folder", self.current_language))
         if folder:
             self.output_path = folder
             self.batch_output_path_var.set(folder)
@@ -917,8 +862,8 @@ class YouTubeDownloader(ctk.CTk):
         if download_type == "video":
             resolution = self.resolution_var.get()
             # En fait les lignes suivantes ne servent pas car le bouton de téléchargement est grisé par défaut
-            if not resolution or resolution == "Choisir une résolution":
-                self.status_label.configure(text="Veuillez sélectionner une résolution")
+            if not resolution or resolution == get_text("choose_resolution", self.current_language):
+                self.status_label.configure(text=get_text("select_resolution", self.current_language))
                 return
 
         bitrate = self.bitrate_var.get()
@@ -942,11 +887,11 @@ class YouTubeDownloader(ctk.CTk):
     def cancel_download(self):
         if self.download_thread:
             self.download_thread.cancel()
-            self.status_label.configure(text="Annulation du téléchargement...")
+            self.status_label.configure(text=get_text("canceling_download", self.current_language))
             self.cancel_btn.configure(state="disabled")
 
     def load_urls_from_file(self):
-        file_path = filedialog.askopenfilename(title="Charger une liste d'URLs", filetypes=[("Fichiers texte", "*.txt")])
+        file_path = filedialog.askopenfilename(title=get_text("load_urls_list", self.current_language), filetypes=[("Fichiers texte", "*.txt")])
         if file_path:
             try:
                 with open(file_path, 'r', encoding='utf-8') as file:
@@ -960,14 +905,14 @@ class YouTubeDownloader(ctk.CTk):
     def start_batch_download(self):
         urls_text = self.urls_text.get("0.0", "end").strip()
         if not urls_text:
-            self.batch_status_label.configure(text="Veuillez ajouter au moins une URL")
+            self.batch_status_label.configure(text=get_text("add_at_least_one_url", self.current_language))
             return
 
         urls = urls_text.split('\n')
         urls = [url.strip() for url in urls if url.strip()]
 
         if not urls:
-            self.batch_status_label.configure(text="Aucune URL valide trouvée")
+            self.batch_status_label.configure(text=get_text("no_valid_urls", self.current_language))
             return
 
         download_type = self.batch_download_type_var.get()
@@ -996,7 +941,7 @@ class YouTubeDownloader(ctk.CTk):
     def cancel_batch_download(self):
         if self.batch_download_thread:
             self.batch_download_thread.cancel()
-            self.batch_status_label.configure(text="Annulation du téléchargement par lot...")
+            self.batch_status_label.configure(text=get_text("canceling_batch_download", self.current_language))
             self.batch_cancel_btn.configure(state="disabled")
 
     def update_progress(self, value):
@@ -1012,7 +957,7 @@ class YouTubeDownloader(ctk.CTk):
 
         if success:
             self.progress_bar.set(1)
-            messagebox.showinfo("Téléchargement terminé", "Le téléchargement a été complété avec succès!")
+            messagebox.showinfo(get_text("download_complete", self.current_language), get_text("download_complete_message", self.current_language))
 
     def update_batch_progress(self, value):
         self.batch_progress_bar.set(value / 100)
@@ -1027,7 +972,7 @@ class YouTubeDownloader(ctk.CTk):
 
         if success:
             self.batch_progress_bar.set(1)
-            messagebox.showinfo("Téléchargement par lot terminé", "Le téléchargement par lot a été complété!")
+            messagebox.showinfo(get_text("batch_download_complete", self.current_language), get_text("batch_download_complete_message", self.current_language))
 
 def main():
     app = YouTubeDownloader()

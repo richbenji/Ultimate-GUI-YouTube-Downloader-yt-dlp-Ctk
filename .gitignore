@@ -124,3 +124,7 @@ dmypy.json
 .pyre/
 
 2Do.txt
+
+YouTube-DL/tests/liens.txt
+
+YouTube-DL/tests/liens2.txt
