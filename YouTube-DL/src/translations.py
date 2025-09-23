@@ -15,20 +15,21 @@ TRANSLATIONS = {
         # Interface principale
         "youtube_url": "URL YouTube:",
         "url_placeholder": "Collez l'URL YouTube ici",
-        "check_button": "Vérifier",
+        "check_button": "Ajouter",
         "title_prefix": "Titre: ",
         "type_label": "Type:",
-        "video_option": "Vidéo",
+        "video_option": "Vidéo + Audio",
         "audio_only_option": "Audio uniquement",
         "resolution_label": "Résolution:",
         "choose_resolution": "Choisir une résolution",
-        "download_folder": "Téléchargement",
+        "download_folder": "Téléchargements",
         "audio_bitrate_label": "Bitrate audio:",
         "output_folder_label": "Dossier de sortie:",
         "browse_button": "Parcourir",
         "download_button": "Télécharger",
         "cancel_button": "Annuler",
         "ready_status": "Prêt",
+        "no_file_in_the_queue": "Aucun fichier dans la file d'attente",
 
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",
@@ -36,6 +37,7 @@ TRANSLATIONS = {
         "batch_download_button": "Télécharger par lot",
 
         # Messages d'état
+        "loading_video_info": "Récupération des informations de la vidéo",
         "enter_valid_url": "Veuillez entrer une URL valide",
         "checking_url": "Vérification de l'URL...",
         "video_found": "Vidéo trouvée: ",
@@ -74,10 +76,10 @@ TRANSLATIONS = {
         # Main interface
         "youtube_url": "YouTube URL:",
         "url_placeholder": "Paste YouTube URL here",
-        "check_button": "Check",
+        "check_button": "Add",
         "title_prefix": "Title: ",
         "type_label": "Type:",
-        "video_option": "Video",
+        "video_option": "Video + Audio",
         "audio_only_option": "Audio only",
         "resolution_label": "Resolution:",
         "choose_resolution": "Choose resolution",
@@ -88,6 +90,7 @@ TRANSLATIONS = {
         "download_button": "Download",
         "cancel_button": "Cancel",
         "ready_status": "Ready",
+        "no_file_in_the_queue": "No file in the queue",
 
         # Batch download
         "urls_list_label": "YouTube URLs list (one per line):",
@@ -95,6 +98,7 @@ TRANSLATIONS = {
         "batch_download_button": "Batch Download",
 
         # Status messages
+        "loading_video_info": "Fetching information from the video",
         "enter_valid_url": "Please enter a valid URL",
         "checking_url": "Checking URL...",
         "video_found": "Video found: ",
@@ -133,10 +137,10 @@ TRANSLATIONS = {
         # Interfaz principal
         "youtube_url": "URL de YouTube:",
         "url_placeholder": "Pega la URL de YouTube aquí",
-        "check_button": "Verificar",
+        "check_button": "Añadir",
         "title_prefix": "Título: ",
         "type_label": "Tipo:",
-        "video_option": "Vídeo",
+        "video_option": "Vídeo + Audio",
         "audio_only_option": "Solo audio",
         "resolution_label": "Resolución:",
         "choose_resolution": "Elegir resolución",
@@ -147,6 +151,7 @@ TRANSLATIONS = {
         "download_button": "Descargar",
         "cancel_button": "Cancelar",
         "ready_status": "Listo",
+        "no_file_in_the_queue": "No hay archivos en la cola",
 
         # Descarga por lotes
         "urls_list_label": "Lista de URLs de YouTube (una por línea):",
@@ -154,6 +159,7 @@ TRANSLATIONS = {
         "batch_download_button": "Descarga por lotes",
 
         # Mensajes de estado
+        "loading_video_info": "loading_video_info",
         "enter_valid_url": "Por favor, introduce una URL válida",
         "checking_url": "Verificando URL...",
         "video_found": "Vídeo encontrado: ",
@@ -192,10 +198,10 @@ TRANSLATIONS = {
         # Interfaccia principale
         "youtube_url": "URL di YouTube:",
         "url_placeholder": "Incolla l'URL di YouTube qui",
-        "check_button": "Verifica",
+        "check_button": "Aggiungere",
         "title_prefix": "Titolo: ",
         "type_label": "Tipo:",
-        "video_option": "Video",
+        "video_option": "Video + Audio",
         "audio_only_option": "Solo audio",
         "resolution_label": "Risoluzione:",
         "choose_resolution": "Scegli risoluzione",
@@ -206,6 +212,7 @@ TRANSLATIONS = {
         "download_button": "Scarica",
         "cancel_button": "Annulla",
         "ready_status": "Pronto",
+        "no_file_in_the_queue": "Nessun file nella coda",
 
         # Download multiplo
         "urls_list_label": "Elenco di URL YouTube (uno per riga):",
@@ -213,6 +220,7 @@ TRANSLATIONS = {
         "batch_download_button": "Download multiplo",
 
         # Messaggi di stato
+        "loading_video_info": "Recupero delle informazioni dal video",
         "enter_valid_url": "Inserisci un URL valido",
         "checking_url": "Verifica dell'URL in corso...",
         "video_found": "Video trovato: ",
@@ -251,10 +259,10 @@ TRANSLATIONS = {
         # Hauptoberfläche
         "youtube_url": "YouTube-URL:",
         "url_placeholder": "Füge die YouTube-URL hier ein",
-        "check_button": "Prüfen",
+        "check_button": "Hinzufügen",
         "title_prefix": "Titel: ",
         "type_label": "Typ:",
-        "video_option": "Video",
+        "video_option": "Video + Audio",
         "audio_only_option": "Nur Audio",
         "resolution_label": "Auflösung:",
         "choose_resolution": "Auflösung wählen",
@@ -265,6 +273,7 @@ TRANSLATIONS = {
         "download_button": "Herunterladen",
         "cancel_button": "Abbrechen",
         "ready_status": "Bereit",
+        "no_file_in_the_queue": "Keine Dateien in der Warteschlange",
 
         # Stapel-Download
         "urls_list_label": "YouTube-URLs (eine pro Zeile):",
@@ -272,6 +281,7 @@ TRANSLATIONS = {
         "batch_download_button": "Stapel-Download",
 
         # Statusmeldungen
+        "loading_video_info": "Abrufen von Informationen aus dem Video",
         "enter_valid_url": "Bitte eine gültige URL eingeben",
         "checking_url": "URL wird überprüft...",
         "video_found": "Video gefunden: ",

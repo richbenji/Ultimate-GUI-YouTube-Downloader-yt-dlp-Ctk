@@ -26,7 +26,7 @@ class VideoInfo:
                 self.resolutions = sorted(resolutions, key=lambda x: int(x[:-1]), reverse=True)
 
                 audio_formats = [f for f in self.formats if f.get('acodec') != 'none' and f.get('abr')]
-                bitrates = {int(f['abr']) for f in audio_formats if f.get('abr')}
+                bitrates = {f['abr'] for f in audio_formats if f.get('abr')}
                 self.audio_bitrates = sorted(bitrates, reverse=True)
 
                 self.is_valid = True

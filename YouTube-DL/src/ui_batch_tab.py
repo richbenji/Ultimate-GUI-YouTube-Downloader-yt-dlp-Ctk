@@ -58,30 +58,32 @@ class BatchDownloadTab:
         # Chargement depuis fichier
         file_frame = ctk.CTkFrame(self.parent)
         file_frame.pack(fill="x", padx=10, pady=5)
-        self.load_file_btn = ctk.CTkButton(file_frame, text=get_text("load_from_file_button", self.app.current_language),
+        self.load_file_btn = ctk.CTkButton(file_frame, text="⬆️ " + get_text("load_from_file_button", self.app.current_language),
                                            command=self.load_urls_from_file)
         self.load_file_btn.pack(side="left", padx=5)
 
         # Dossier de sortie
         output_frame = ctk.CTkFrame(self.parent)
         output_frame.pack(fill="x", padx=10, pady=5)
-        self.batch_output_label = ctk.CTkLabel(output_frame, text=get_text("output_folder_label", self.app.current_language))
+        self.batch_output_label = ctk.CTkLabel(output_frame, text="📁 " + get_text("output_folder_label", self.app.current_language))
         self.batch_output_label.pack(side="left", padx=5)
         self.batch_output_path_var = tk.StringVar(value=self.app.output_path)
         self.output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.batch_output_path_var, width=350)
         self.output_path_entry.pack(side="left", padx=5, fill="x", expand=True)
-        self.batch_browse_btn = ctk.CTkButton(output_frame, text=get_text("browse_button", self.app.current_language),
+        self.batch_browse_btn = ctk.CTkButton(output_frame, text="🗃 " + get_text("browse_button", self.app.current_language),
                                               command=self.select_output_folder)
         self.batch_browse_btn.pack(side="left", padx=5)
 
         # Boutons
         buttons_frame = ctk.CTkFrame(self.parent)
         buttons_frame.pack(fill="x", padx=10, pady=5)
-        self.batch_download_btn = ctk.CTkButton(buttons_frame, text=get_text("download_button", self.app.current_language),
+        self.batch_download_btn = ctk.CTkButton(buttons_frame, text="⬇️ " + get_text("download_button", self.app.current_language),
                                                 command=self.start_batch_download)
         self.batch_download_btn.pack(side="left", padx=5)
-        self.batch_cancel_btn = ctk.CTkButton(buttons_frame, text=get_text("cancel_button", self.app.current_language),
-                                              command=self.cancel_batch_download, state="disabled")
+        self.batch_cancel_btn = ctk.CTkButton(buttons_frame,
+                                              text="↩️ " + get_text("cancel_button", self.app.current_language),
+                                              command=self.cancel_batch_download,
+                                              state="disabled")
         self.batch_cancel_btn.pack(side="left", padx=5)
 
         # Progression et statut

@@ -5,6 +5,7 @@ from .translations import get_text
 from .utils import load_custom_font, load_logo_image
 from .ui_single_tab import SingleDownloadTab
 from .ui_batch_tab import BatchDownloadTab
+from .ui_multiple_tab import MultipleDownloadTab
 
 class YouTubeDownloader(ctk.CTk):
     def __init__(self):
@@ -26,7 +27,8 @@ class YouTubeDownloader(ctk.CTk):
         self.geometry("800x700")
 
         # Apparence
-        ctk.set_appearance_mode("System")
+        self.appearance_mode = "System"  # suivi du mode choisi
+        ctk.set_appearance_mode("System")  # au démarrage, suivre le système
         ctk.set_default_color_theme("blue")
 
         # Dossier de sortie par défaut
@@ -38,54 +40,74 @@ class YouTubeDownloader(ctk.CTk):
         self.setup_tabs()
 
     def setup_header(self):
-        header_frame = ctk.CTkFrame(self, height=120)
+        header_frame = ctk.CTkFrame(self, height=100)
         header_frame.pack(fill="x", padx=10, pady=(10, 0))
-        header_frame.pack_propagate(False)
+        header_frame.grid_propagate(False)
 
-        # Sélecteur de langue
-        language_frame = ctk.CTkFrame(header_frame, width=140)
-        language_frame.pack(side="left", padx=10, pady=10)
-        language_frame.pack_propagate(False)
-        language_label = ctk.CTkLabel(language_frame, text="🌐", font=ctk.CTkFont(size=16))
-        language_label.pack(pady=(5, 0))
+        # Centrage vertical et horizontal
+        header_frame.grid_rowconfigure(0, weight=1)
+        header_frame.grid_columnconfigure(1, weight=1)
+
+        # === Colonne gauche : switch + langue ===
+        left_container = ctk.CTkFrame(header_frame, fg_color="transparent")
+        left_container.grid(row=0, column=0, sticky="nsw", padx=10, pady=10)
+        left_container.grid_rowconfigure((0, 1), weight=1)  # pour centrer verticalement
+
+        # Switch Dark/Light (ligne 0)
+        self.theme_switch = ctk.CTkSwitch(
+            left_container,
+            text="🌙 / ☀️",
+            command=self.toggle_theme
+        )
+        self.theme_switch.grid(row=0, column=0, sticky="w", pady=(0, 5))
+        if self.appearance_mode == "Dark":
+            self.theme_switch.select()
+        elif self.appearance_mode == "Light":
+            self.theme_switch.deselect()
+
+        # Langue (ligne 1)
+        lang_frame = ctk.CTkFrame(left_container, fg_color="transparent")
+        lang_frame.grid(row=1, column=0, sticky="w")
+
         self.language_combo = ctk.CTkComboBox(
-            master=language_frame,
+            master=lang_frame,
             values=list(self.available_languages.values()),
             command=self.change_language,
             width=120,
             height=28
         )
         self.language_combo.set(self.available_languages[self.current_language])
-        self.language_combo.pack(pady=(0, 5))
+        self.language_combo.pack(side="left")
 
-        # Logo
-        logo_image = load_logo_image("assets/Youtube_logo.png")
-        if logo_image:
-            logo_frame = ctk.CTkFrame(header_frame, width=100, height=100)
-            logo_frame.pack(side="right", padx=10, pady=10)
-            logo_frame.pack_propagate(False)
-            logo_label = ctk.CTkLabel(logo_frame, image=logo_image, text="")
-            logo_label.pack(expand=True)
+        language_label = ctk.CTkLabel(lang_frame, text="🌐", font=ctk.CTkFont(size=16))
+        language_label.pack(side="right", padx=(10,0))
 
-        # Titre et sous-titre
-        title_frame = ctk.CTkFrame(header_frame)
-        title_frame.pack(expand=True, fill="both", padx=10, pady=10)
+        # === Colonne centrale : titre + sous-titre ===
+        title_container = ctk.CTkFrame(header_frame, fg_color="transparent")
+        title_container.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+
         title_font = load_custom_font("fonts/TradeGothic Bold.ttf")
         self.title_label_main = ctk.CTkLabel(
-            title_frame,
+            title_container,
             text=get_text("app_title", self.current_language),
             font=title_font,
-            text_color=("#1f538d", "#14375e"),
+            text_color=("#1f538d", "#3B8ED0"),
             pady=5
         )
         self.title_label_main.pack(expand=True)
         self.subtitle_label_main = ctk.CTkLabel(
-            title_frame,
+            title_container,
             text=get_text("app_subtitle", self.current_language),
             font=ctk.CTkFont(family="Arial", size=14, slant="italic"),
             text_color=("#666666", "#999999")
         )
         self.subtitle_label_main.pack(expand=True)
+
+        # === Colonne droite : logo ===
+        logo_image = load_logo_image("assets/Youtube_logo.png")
+        if logo_image:
+            logo_label = ctk.CTkLabel(header_frame, image=logo_image, text="")
+            logo_label.grid(row=0, column=2, sticky="nse", padx=10, pady=10)
 
     def setup_tabs(self):
         self.tabview = ctk.CTkTabview(self)
@@ -94,10 +116,20 @@ class YouTubeDownloader(ctk.CTk):
         # Onglets
         self.tab_single = self.tabview.add(get_text("single_download_tab", self.current_language))
         self.tab_batch = self.tabview.add(get_text("batch_download_tab", self.current_language))
+        self.tab_multiple = self.tabview.add(get_text("multiple_download_tab", self.current_language))
 
         # Injection des sous-interfaces
         self.single_tab_ui = SingleDownloadTab(self.tab_single, self)
         self.batch_tab_ui = BatchDownloadTab(self.tab_batch, self)
+        self.batch_tab_multiple = MultipleDownloadTab(self.tab_batch, self)
+
+    def toggle_theme(self):
+        if self.theme_switch.get() == 1:
+            ctk.set_appearance_mode("Dark")
+            self.appearance_mode = "Dark"
+        else:
+            ctk.set_appearance_mode("Light")
+            self.appearance_mode = "Light"
 
     def change_language(self, selected_language_name):
         for lang_code, lang_name in self.available_languages.items():

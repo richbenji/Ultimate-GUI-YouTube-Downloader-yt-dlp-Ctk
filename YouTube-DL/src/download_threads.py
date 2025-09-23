@@ -68,13 +68,13 @@ class DownloadThread(threading.Thread):
     def run(self):
         try:
             if self.download_type == "video":
-                height = int(self.resolution[:-1]) if self.resolution and self.resolution.endswith('p') else None
+                height = self.resolution[:-1] if self.resolution and self.resolution.endswith('p') else None
                 format_str = f'bestvideo[ext=mp4]'
                 if height:
                     format_str = f'bestvideo[height<={height}][ext=mp4]'
 
                 if self.bitrate and self.bitrate != "Auto":
-                    bitrate_val = int(self.bitrate.replace(" kbps", ""))
+                    bitrate_val = self.bitrate.replace(" kbps", "")
                     format_str += f'+bestaudio[abr<={bitrate_val+10}][abr>={bitrate_val-10}]/bestaudio[ext=m4a]'
                 else:
                     format_str += '+bestaudio[ext=m4a]'
@@ -190,12 +190,12 @@ class BatchDownloadThread(threading.Thread):
 
                 # construire options comme pour DownloadThread
                 if self.download_type == "video":
-                    height = int(self.resolution[:-1]) if (self.resolution and self.resolution.endswith('p')) else None
+                    height = self.resolution[:-1] if (self.resolution and self.resolution.endswith('p')) else None
                     format_str = 'bestvideo[ext=mp4]'
                     if height:
                         format_str = f'bestvideo[height<={height}][ext=mp4]'
                     if self.bitrate and self.bitrate != "Auto":
-                        bitrate_val = int(self.bitrate.replace(" kbps", ""))
+                        bitrate_val = self.bitrate.replace(" kbps", "")
                         format_str += f'+bestaudio[abr<={bitrate_val+10}][abr>={bitrate_val-10}]/bestaudio[ext=m4a]'
                     else:
                         format_str += '+bestaudio[ext=m4a]'
