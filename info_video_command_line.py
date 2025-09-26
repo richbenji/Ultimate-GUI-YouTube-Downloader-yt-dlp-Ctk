@@ -146,4 +146,6 @@ with YoutubeDL(ydl_opts) as ydl:
     print("\n=== Meilleur format audio seule ===")
     if best_audio:
         print(
-            f"Format ID: {best_audio.get('format_id')}, Audio BR: {best_audio.get('abr')} kbps, Extension: {best_audio.get('ext')}")
+            f"Format ID: {best_audio.get('format_id')},"
+            f"Audio BR: {best_audio.get('abr')} kbps,"
+            f"Extension: {best_audio.get('ext')}")

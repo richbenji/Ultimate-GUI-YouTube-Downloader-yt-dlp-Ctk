@@ -46,9 +46,13 @@ class VideoItemFrame(ctk.CTkFrame):
         right_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=0)
         right_frame.grid_columnconfigure(1, weight=1)
 
+        # Ligne avec croix + info
+        top_buttons = ctk.CTkFrame(right_frame, fg_color="transparent")
+        top_buttons.pack(anchor="ne", fill="x")
+
         # Bouton fermer (croix)
         self.close_btn = ctk.CTkButton(
-            right_frame,
+            top_buttons,
             text="❌",
             width=24,
             height=24,
@@ -57,6 +61,18 @@ class VideoItemFrame(ctk.CTkFrame):
             command=lambda: self.parent_tab.remove_video(self)
         )
         self.close_btn.pack(anchor="ne", pady=(0, 4))
+
+        # Bouton info (ℹ️)
+        self.info_btn = ctk.CTkButton(
+            top_buttons,
+            text="ℹ️",
+            width=24,
+            height=24,
+            fg_color="transparent",
+            hover_color="#1f6aa5",
+            command=self.show_info
+        )
+        self.info_btn.pack(side="right", padx=(0, 4))
 
         # Titre
         self.title_label = ctk.CTkLabel(
@@ -188,6 +204,41 @@ class VideoItemFrame(ctk.CTkFrame):
         self.radio_audio.configure(text=get_text("audio_only_option", self.app.current_language))
         self.resolution_label.configure(text=get_text("resolution_label", self.app.current_language))
         self.bitrate_label.configure(text=get_text("audio_bitrate_label", self.app.current_language))
+
+    def show_info(self):
+        """Affiche les infos détaillées dans une popup. Utilise get_detailed_summary() si disponible."""
+        # Récupère texte via get_detailed_summary si présent, sinon on compose un fallback
+        if hasattr(self.info, "get_detailed_summary"):
+            info_text = self.info.get_detailed_summary()
+        else:
+            # fallback minimal
+            info_text = (
+                f"Titre: {getattr(self.info, 'title', '')}\n"
+                f"Durée: {self._format_duration(getattr(self.info, 'duration', 0))}\n"
+                f"Résolutions: {', '.join(getattr(self.info, 'resolutions', []) or [])}\n"
+                f"Bitrates audio: {', '.join(str(int(b)) for b in (getattr(self.info, 'audio_bitrates', []) or []))}\n\n"
+                f"Formats disponibles (extraits):\n"
+            )
+            for f in (getattr(self.info, "formats", []) or [])[:30]:
+                info_text += f"- id:{f.get('format_id')} ext:{f.get('ext')} res:{f.get('resolution') or f.get('height')} abr:{f.get('abr')}\n"
+
+        # popup
+        popup = ctk.CTkToplevel(self)
+        popup.title(
+            get_text("video_info_title", self.app.current_language) if hasattr(get_text, "__call__") else "Infos vidéo")
+        popup.geometry("700x450")
+
+        try:
+            textbox = ctk.CTkTextbox(popup, wrap="word")
+            textbox.pack(fill="both", expand=True, padx=10, pady=10)
+            textbox.insert("1.0", info_text)
+            textbox.configure(state="disabled")
+        except Exception:
+            # fallback si CTkTextbox indisponible
+            txt = tk.Text(popup, wrap="word")
+            txt.pack(fill="both", expand=True, padx=10, pady=10)
+            txt.insert("1.0", info_text)
+            txt.configure(state="disabled")
 
 
 class SingleDownloadTab:

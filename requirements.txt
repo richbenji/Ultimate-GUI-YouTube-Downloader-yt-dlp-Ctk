@@ -1,7 +1,11 @@
-tabulate
-requests
+certifi==2025.8.3
+charset-normalizer==3.4.3
 customtkinter==5.2.2
 darkdetect==0.8.0
+idna==3.10
 packaging==24.2
 pillow==11.3.0
-yt-dlp==2025.4.30
+requests==2.32.5
+tabulate==0.9.0
+urllib3==2.5.0
+yt-dlp==2025.9.23
