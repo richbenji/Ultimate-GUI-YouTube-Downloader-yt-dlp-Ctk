@@ -1,11 +1,11 @@
 import os
 import customtkinter as ctk
-from tkinter import filedialog, messagebox
 from .translations import get_text
 from .utils import load_custom_font, load_logo_image
 from .ui_single_tab import SingleDownloadTab
 from .ui_batch_tab import BatchDownloadTab
 from .ui_multiple_tab import MultipleDownloadTab
+
 
 class YouTubeDownloader(ctk.CTk):
     def __init__(self):

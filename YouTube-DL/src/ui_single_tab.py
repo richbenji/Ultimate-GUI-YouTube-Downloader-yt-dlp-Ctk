@@ -30,116 +30,110 @@ class VideoItemFrame(ctk.CTkFrame):
         self.resolution = tk.StringVar(value=info.resolutions[0] if info.resolutions else "720p")
         self.bitrate = tk.StringVar(value="Auto")
 
-        # layout : 2 colonnes (0 = miniature, 1 = titre + options)
+        # layout principal : 2 colonnes (0 = miniature, 1 = contenu)
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        # on garde une seule ligne principale, la miniature occupera plusieurs "rows" visuellement
+        # (la grille ci-dessous pour right_frame gérera la verticalité interne)
 
-        # --- Colonne gauche : miniature ---
-        self.thumb_label = ctk.CTkLabel(self, text="")  # image définie plus tard
-        self.thumb_label.grid(row=0, column=0, rowspan=3, sticky="nsew", padx=0, pady=0)
-        if info.thumbnail:
+        # --- Colonne gauche : miniature (placeholder d'abord) ---
+        self.thumb_label = ctk.CTkLabel(self, text="")
+        # rowspan=3 pour que la miniature s'étende visuellement sur la hauteur des 3 sections du right_frame
+        self.thumb_label.grid(row=0, column=0, rowspan=3, sticky="nw", padx=0, pady=0)
+        if getattr(info, "thumbnail", None):
             self._load_thumbnail_async(info.thumbnail)
 
-        # --- Colonne droite ---
+            # --- Colonne droite : right_frame (strictement en grid) ---
         right_frame = ctk.CTkFrame(self, fg_color="transparent")
         right_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=0)
-        right_frame.grid_columnconfigure(1, weight=1)
 
-        # Ligne avec croix + info
-        top_buttons = ctk.CTkFrame(right_frame, fg_color="transparent")
-        top_buttons.pack(anchor="ne", fill="x")
+        # configuration interne de right_frame : 3 lignes (titre, options, extra_info)
+        right_frame.grid_columnconfigure(0, weight=1)  # colonne texte principale
+        right_frame.grid_columnconfigure(1, weight=0)  # colonne petits boutons si besoin
+        right_frame.grid_rowconfigure(0, weight=0)  # titre (hauteur minimale)
+        right_frame.grid_rowconfigure(1, weight=1)  # options (prend l'espace restant si besoin)
+        right_frame.grid_rowconfigure(2, weight=0)  # extra_info (bas)
 
-        # Bouton fermer (croix)
-        self.close_btn = ctk.CTkButton(
-            top_buttons,
-            text="❌",
-            width=24,
-            height=24,
-            fg_color="transparent",
-            hover_color="red",
-            command=lambda: self.parent_tab.remove_video(self)
-        )
-        self.close_btn.pack(anchor="ne", pady=(0, 4))
-
-        # Bouton info (ℹ️)
-        self.info_btn = ctk.CTkButton(
-            top_buttons,
-            text="ℹ️",
-            width=24,
-            height=24,
-            fg_color="transparent",
-            hover_color="#1f6aa5",
-            command=self.show_info
-        )
-        self.info_btn.pack(side="right", padx=(0, 4))
-
-        # Titre
+        # --- Ligne 0 : titre à gauche + boutons (info/close) à droite sur la même ligne ---
+        # Titre (col 0)
         self.title_label = ctk.CTkLabel(
             right_frame,
-            text=info.title or "Titre inconnu",
+            text=getattr(info, "title", "Titre inconnu"),
             font=ctk.CTkFont(size=14, weight="bold"),
             wraplength=400,
             justify="left",
             anchor="w"
         )
-        self.title_label.pack(anchor="nw", pady=(0, 8))
+        self.title_label.grid(row=0, column=0, sticky="nw", padx=(0, 6), pady=(2, 2))
 
+        # Boutons (col 1) — conteneur minimal, on peut pack dedans
+        buttons_frame = ctk.CTkFrame(right_frame, fg_color="transparent")
+        buttons_frame.grid(row=0, column=1, sticky="ne", padx=(0, 0), pady=(2, 2))
+
+        # Info button
+        self.info_btn = ctk.CTkButton(
+            buttons_frame,
+            text="ℹ️",
+            width=26, height=26,
+            fg_color="transparent",
+            hover_color="gray",
+            command=self.show_info
+        )
+        self.info_btn.pack(side="right", padx=(4, 2))
+
+        # Close button
+        self.close_btn = ctk.CTkButton(
+            buttons_frame,
+            text="❌",
+            width=26, height=26,
+            fg_color="transparent",
+            hover_color="red",
+            command=lambda: self.parent_tab.remove_video(self)
+        )
+        self.close_btn.pack(side="right", padx=(2, 0))
+
+        # --- Ligne 1 : container pour les options (type / résolution / bitrate) ---
+        opts_container = ctk.CTkFrame(right_frame, fg_color="transparent")
+        opts_container.grid(row=1, column=0, columnspan=2, sticky="nw", padx=(0, 0), pady=(4, 0))
+        # On utilise pack dans ce sous-conteneur pour empiler verticalement les lignes d'options
         # Type (vidéo / audio)
-        type_frame = ctk.CTkFrame(right_frame, fg_color="transparent")
+        type_frame = ctk.CTkFrame(opts_container, fg_color="transparent")
         type_frame.pack(fill="x", pady=(0, 6))
-        self.radio_video = ctk.CTkRadioButton(
+        ctk.CTkRadioButton(
             type_frame,
             text=get_text("video_option", app.current_language),
             variable=self.download_type,
             value="video"
-        )
-        self.radio_video.pack(side="left", padx=6)
-        self.radio_audio = ctk.CTkRadioButton(
+        ).pack(side="left", padx=6)
+        ctk.CTkRadioButton(
             type_frame,
             text=get_text("audio_only_option", app.current_language),
             variable=self.download_type,
             value="audio"
-        )
-        self.radio_audio.pack(side="left", padx=6)
+        ).pack(side="left", padx=6)
 
         # Résolution
-        res_frame = ctk.CTkFrame(right_frame, fg_color="transparent")
+        res_frame = ctk.CTkFrame(opts_container, fg_color="transparent")
         res_frame.pack(fill="x", pady=(0, 6))
-        self.resolution_label = ctk.CTkLabel(
-            res_frame,
-            text=get_text("resolution_label", app.current_language)
-        )
-        self.resolution_label.pack(side="left", padx=6)
+        ctk.CTkLabel(res_frame, text=get_text("resolution_label", app.current_language)).pack(side="left", padx=6)
         values_res = getattr(info, "resolutions", None) or ["1080p", "720p", "480p", "360p"]
         self.resolution_combo = ctk.CTkComboBox(res_frame, variable=self.resolution, values=values_res)
         self.resolution_combo.set(self.resolution.get())
         self.resolution_combo.pack(side="left", padx=6)
 
         # Bitrate
-        br_frame = ctk.CTkFrame(right_frame, fg_color="transparent")
+        br_frame = ctk.CTkFrame(opts_container, fg_color="transparent")
         br_frame.pack(fill="x", pady=(0, 6))
-
-        self.bitrate_label = ctk.CTkLabel(
-            br_frame,
-            text=get_text("audio_bitrate_label", app.current_language)
-        )
-        self.bitrate_label.pack(side="left", padx=6)
-
-        # Construire la liste avec "Auto" + les vrais bitrates
+        ctk.CTkLabel(br_frame, text=get_text("audio_bitrate_label", app.current_language)).pack(side="left", padx=6)
         bitrates = getattr(info, "audio_bitrates", [])
-        bitrate_values = ["Auto"] + [f"{b} kbps" for b in bitrates]
-
-        self.bitrate_combo = ctk.CTkComboBox(
-            br_frame,
-            variable=self.bitrate,
-            values=bitrate_values
-        )
-        self.bitrate_combo.set("Auto")
+        bitrate_values = ["Auto"] + [f"{int(b)} kbps" for b in bitrates]
+        self.bitrate_combo = ctk.CTkComboBox(br_frame, variable=self.bitrate, values=bitrate_values)
+        # default = Auto
+        self.bitrate_combo.set(self.bitrate.get() or "Auto")
         self.bitrate_combo.pack(side="left", padx=6)
 
-        # --- Durée et taille ---
-        duration_str = self._format_duration(info.duration)
+        # --- Ligne 2 : durée + taille alignées à droite en bas ---
+        duration_str = self._format_duration(getattr(info, "duration", 0))
         size_str = self._get_size_string(info)
         self.extra_info_label = ctk.CTkLabel(
             right_frame,
@@ -148,7 +142,8 @@ class VideoItemFrame(ctk.CTkFrame):
             anchor="e",
             justify="right"
         )
-        self.extra_info_label.pack(anchor="e", pady=(8, 0))
+        # placer en bas à droite : row=2, col=0 col-span pour couvrir largeur, sticky sud-est
+        self.extra_info_label.grid(row=2, column=0, columnspan=2, sticky="se", padx=(0, 0), pady=(6, 4))
 
     # ------------------ Méthodes utilitaires ------------------ #
     def _load_thumbnail_async(self, url):
@@ -180,7 +175,7 @@ class VideoItemFrame(ctk.CTkFrame):
         if not sizes:
             return "Inconnue"
         size_mb = max(sizes) / (1024 * 1024)
-        return f"{size_mb:.1f} MB"
+        return f"{size_mb:.2f} MB"
 
     def _format_duration(self, seconds):
         if not seconds:
