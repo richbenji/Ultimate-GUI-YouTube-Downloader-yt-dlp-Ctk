@@ -87,7 +87,8 @@ class DownloadThread(threading.Thread):
                     'progress_hooks': [self.progress_hook],
                     'quiet': True,
                     'no_warnings': True,
-                    'merge_output_format': 'mp4'
+                    'merge_output_format': 'mp4',
+                    'nooverwrites': True
                 }
             else:  # audio
                 preferred_quality = self.bitrate.replace(" kbps", "") if (self.bitrate and self.bitrate != "Auto") else "192"
@@ -102,6 +103,7 @@ class DownloadThread(threading.Thread):
                     }],
                     'quiet': True,
                     'no_warnings': True,
+                    'nooverwrites': True
                 }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
