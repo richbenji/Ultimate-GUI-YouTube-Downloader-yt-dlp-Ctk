@@ -3,6 +3,8 @@ import customtkinter as ctk
 from tkinter import messagebox
 from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
+from .utils import ask_output_folder
+
 
 import threading
 from io import BytesIO
@@ -257,12 +259,14 @@ class SingleDownloadTab:
         # Entrée URL + bouton "Vérifier"
         url_frame = ctk.CTkFrame(self.parent)
         url_frame.pack(fill="x", padx=10, pady=(10, 5))
+
         self.url_input = ctk.CTkEntry(
             url_frame,
             width=400,
             placeholder_text=get_text("url_placeholder", self.app.current_language)
         )
         self.url_input.pack(side="left", padx=5, fill="x", expand=True)
+
         self.check_url_btn = ctk.CTkButton(
             url_frame,
             text="➕ " + get_text("check_button", self.app.current_language),
@@ -277,68 +281,38 @@ class SingleDownloadTab:
         # Texte par défaut
         self.show_placeholder()
 
-        # Sélecteur de dossier
-        output_frame = ctk.CTkFrame(self.parent)
-        output_frame.pack(fill="x", padx=10, pady=(5, 5))
-        ctk.CTkLabel(output_frame, text="📁 " + get_text("output_folder_label", self.app.current_language)).pack(side="left",
-                                                                                                         padx=5)
-        self.output_path_var = tk.StringVar(value=self.app.output_path)
-        self.output_path_entry = ctk.CTkEntry(output_frame, textvariable=self.output_path_var, width=350)
-        self.output_path_entry.pack(side="left", padx=5, fill="x", expand=True)
-        browse_btn = ctk.CTkButton(output_frame, text="🗃 " + get_text("browse_button", self.app.current_language),
-                                   command=self.select_output_folder)
-        browse_btn.pack(side="left", padx=5)
-
-        # Bouton unique Download/Cancel
+        # Bouton unique Download/Cancel (centré)
         buttons_frame = ctk.CTkFrame(self.parent)
         buttons_frame.pack(fill="x", pady=5)
-
-        # 3 colonnes : gauche, centre, droite
-        buttons_frame.grid_columnconfigure(0, weight=1)  # espace vide gauche
-        buttons_frame.grid_columnconfigure(1, weight=0)  # bouton
-        buttons_frame.grid_columnconfigure(2, weight=1)  # espace vide droite
+        buttons_frame.grid_columnconfigure(0, weight=1)
+        buttons_frame.grid_columnconfigure(1, weight=0)
+        buttons_frame.grid_columnconfigure(2, weight=1)
 
         self.download_btn = ctk.CTkButton(
             buttons_frame,
             text="⬇️ " + get_text("download_button", self.app.current_language),
             command=self.start_download_all,
             state="disabled",
-            width=400,  # largeur fixe (ajuste comme tu veux)
-            #height=40  # un peu plus haut aussi si tu veux
+            width=400
         )
-        # placer au centre (col=1)
-        self.download_btn.grid(row=0, column=1, pady=5)
+        self.download_btn.grid(row=0, column=1, pady=10)
 
-        # Progression et statut
+        # Progression + statut
+        self.single_status_label = ctk.CTkLabel(self.parent, text=get_text("ready_status", self.app.current_language))
+        self.single_status_label.pack(fill="x", padx=10, pady=0)
+
         self.single_progress_bar = ctk.CTkProgressBar(self.parent)
-        self.single_progress_bar.pack(fill="x", padx=10, pady=5)
+        self.single_progress_bar.pack(fill="x", padx=10, pady=0)
         self.single_progress_bar.set(0)
 
-        self.single_status_label = ctk.CTkLabel(self.parent, text=get_text("ready_status", self.app.current_language))
-        self.single_status_label.pack(fill="x", padx=10, pady=5)
 
     # ---------------- UI helpers ----------------
-
-    def select_output_folder(self):
-        """Choisir un dossier de sortie."""
-        folder = ctk.filedialog.askdirectory(title=get_text("select_output_folder", self.app.current_language))
-        if folder:
-            self.app.output_path = folder
-            self.output_path_var.set(folder)
 
     def refresh_texts(self):
         """Met à jour les textes traduits de l'onglet 'Téléchargement unique'."""
         # Champ URL
         self.url_input.configure(placeholder_text=get_text("url_placeholder", self.app.current_language))
         self.check_url_btn.configure(text="✔️ " + get_text("check_button", self.app.current_language))
-
-        # Labels et boutons du dossier de sortie
-        for child in self.output_path_entry.master.winfo_children():
-            if isinstance(child, ctk.CTkLabel):
-                child.configure(text="📁 " + get_text("output_folder_label", self.app.current_language))
-            elif isinstance(child, ctk.CTkButton) and child.cget("text") != get_text("download_button",
-                                                                                     self.app.current_language):
-                child.configure(text="🗃 " + get_text("browse_button", self.app.current_language))
 
         # texte du bouton selon l'état
         if self.is_downloading:
@@ -347,11 +321,13 @@ class SingleDownloadTab:
             self.download_btn.configure(text="⬇️ " + get_text("download_button", self.app.current_language))
 
         # statut / placeholder
+        if not self.is_downloading:
+            self.single_status_label.configure(text=get_text("ready_status", self.app.current_language))
+
         if self.placeholder_label is not None:
             self.placeholder_label.configure(text=get_text("no_file_in_the_queue", self.app.current_language))
-        self.single_status_label.configure(text=get_text("ready_status", self.app.current_language) if not self.is_downloading else self.single_status_label.cget("text"))
 
-        # Mettre aussi à jour les textes dans chaque vidéo déjà ajoutée
+        # Mettre aussi à jour les textes dans chaque frame de vidéo déjà ajoutée
         for vf in self.video_frames:
             if hasattr(vf, "refresh_texts"):
                 vf.refresh_texts()
@@ -405,6 +381,7 @@ class SingleDownloadTab:
 
         self.url_input.delete(0, "end")
         self.check_url_btn.configure(state="normal")
+
         # si au moins un fichier -> activer le bouton (si pas en téléchargement)
         if not self.is_downloading:
             self.download_btn.configure(state="normal")
@@ -432,10 +409,14 @@ class SingleDownloadTab:
         if not self.video_frames:
             return
 
-        # reset état
+        # demander dossier de sortie
+        output_path = ask_output_folder(self.app.current_language, self.app.output_path)
+        if not output_path:
+            return
+        self.app.output_path = output_path
+
         self.active_threads.clear()
         self._thread_progress.clear()
-        output_path = self.output_path_var.get()
         self.is_downloading = True
 
         # UI
@@ -443,7 +424,9 @@ class SingleDownloadTab:
         self.single_status_label.configure(text=get_text("download_started", self.app.current_language))
         self.download_btn.configure(text="↩️ " + get_text("cancel_button", self.app.current_language),
                                     command=self.cancel_downloads,
-                                    state="normal")
+                                    state="normal"
+                                    )
+
         self.check_url_btn.configure(state="disabled")
 
         # lancer un DownloadThread par vidéo, en collectant les callbacks correctement
@@ -455,24 +438,15 @@ class SingleDownloadTab:
 
             def make_progress_cb(tref):
                 def _progress(pct):
-                    # exécute sur main thread
                     t = tref.get('t')
                     self.app.after(0, lambda: self._on_thread_progress(t, pct))
-
                 return _progress
 
             def make_status_cb():
-                def _status(txt):
-                    self.app.after(0, lambda: self.single_status_label.configure(text=txt))
-
-                return _status
+                return lambda txt: self.app.after(0, lambda: self.single_status_label.configure(text=txt))
 
             def make_finished_cb(tref):
-                def _finished(success):
-                    t = tref.get('t')
-                    self.app.after(0, lambda: self._on_thread_finished(t, success))
-
-                return _finished
+                return lambda success: self.app.after(0, lambda: self._on_thread_finished(tref.get('t'), success))
 
             thread = DownloadThread(
                 opts["url"],
@@ -501,7 +475,8 @@ class SingleDownloadTab:
         self.is_downloading = False
         self.download_btn.configure(text="⬇️ " + get_text("download_button", self.app.current_language),
                                     command=self.start_download_all,
-                                    state="normal")
+                                    state="normal"
+                                    )
         self.check_url_btn.configure(state="normal")
         self.single_status_label.configure(text=get_text("canceling_download", self.app.current_language) if get_text("canceling_download", self.app.current_language) else "Annulation en cours...")
         # facultatif : reset progress bar
@@ -527,24 +502,20 @@ class SingleDownloadTab:
             # remettre le bouton en mode Télécharger
             self.download_btn.configure(text="⬇️ " + get_text("download_button", self.app.current_language),
                                         command=self.start_download_all,
-                                        state="normal")
+                                        state="normal"
+                                        )
             self.check_url_btn.configure(state="normal")
             # final UI
             self.single_progress_bar.set(1)
-            if success:
-                # message et status
-                self.single_status_label.configure(
-                    text=get_text("download_complete", self.app.current_language) if get_text("download_complete",
-                                                                                              self.app.current_language) else "Téléchargement terminé")
-                try:
-                    messagebox.showinfo(get_text("download_complete", self.app.current_language),
-                                        get_text("download_complete_message", self.app.current_language))
-                except Exception:
-                    pass
-            else:
-                self.single_status_label.configure(
-                    text=get_text("download_failed", self.app.current_language) if get_text("download_failed",
-                                                                                            self.app.current_language) else "Téléchargement échoué")
+        if success:
+            self.single_status_label.configure(text=get_text("download_complete", self.app.current_language))
+            try:
+                messagebox.showinfo(get_text("download_complete", self.app.current_language),
+                                    get_text("download_complete_message", self.app.current_language))
+            except Exception:
+                pass
+        else:
+            self.single_status_label.configure(text=get_text("download_failed", self.app.current_language))
 
 class LoadingItemFrame(ctk.CTkFrame):
     """Frame temporaire affichée pendant le chargement des infos d'une vidéo."""
