@@ -1,6 +1,6 @@
 import tkinter as tk
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
 from .utils import ask_output_folder
@@ -223,23 +223,38 @@ class VideoItemFrame(ctk.CTkFrame):
             for f in (getattr(self.info, "formats", []) or [])[:30]:
                 info_text += f"- id:{f.get('format_id')} ext:{f.get('ext')} res:{f.get('resolution') or f.get('height')} abr:{f.get('abr')}\n"
 
+        def show_video_table(parent, video_info):
+            headers, rows = video_info.get_table_data()
+
+            tree = ttk.Treeview(parent, columns=headers, show="headings", height=10)
+            for col in headers:
+                tree.heading(col, text=col)
+                tree.column(col, width=120, anchor="center")  # ajuste largeur
+
+            for row in rows:
+                tree.insert("", "end", values=row)
+
+            tree.pack(fill="both", expand=True, padx=10, pady=10)
+
         # popup
         popup = ctk.CTkToplevel(self)
         popup.title(
             get_text("video_info_title", self.app.current_language) if hasattr(get_text, "__call__") else "Infos vidéo")
         popup.geometry("700x450")
 
-        try:
-            textbox = ctk.CTkTextbox(popup, wrap="word")
-            textbox.pack(fill="both", expand=True, padx=10, pady=10)
-            textbox.insert("1.0", info_text)
-            textbox.configure(state="disabled")
-        except Exception:
-            # fallback si CTkTextbox indisponible
-            txt = tk.Text(popup, wrap="word")
-            txt.pack(fill="both", expand=True, padx=10, pady=10)
-            txt.insert("1.0", info_text)
-            txt.configure(state="disabled")
+        tabview = ctk.CTkTabview(popup)
+        tabview.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Onglet texte
+        tab_text = tabview.add("Résumé texte")
+        textbox = ctk.CTkTextbox(tab_text, wrap="word", font=("Ubuntu Mono", 12))
+        textbox.pack(fill="both", expand=True, padx=10, pady=10)
+        textbox.insert("1.0", info_text)
+        textbox.configure(state="disabled")
+
+        # Onglet tableau
+        tab_table = tabview.add("Tableau")
+        show_video_table(tab_table, self.info)
 
 
 class SingleDownloadTab:

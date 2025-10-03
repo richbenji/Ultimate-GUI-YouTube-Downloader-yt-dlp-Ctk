@@ -192,3 +192,47 @@ class VideoInfo:
             )
 
         return "\n".join(lines)
+
+    def get_table_data(self):
+        """Retourne (headers, rows) pour un affichage Treeview."""
+        headers = [
+            "Type", "Resolution", "Bitrate (kbps)", "Ext",
+            "Filesize", "FPS", "Codec", "Format", "Format ID", "Protocole"
+        ]
+
+        rows = []
+        for f in self.formats or []:
+            format_id = f.get("format_id")
+            ext = f.get("ext")
+            resolution = f.get("resolution") or (f"{f.get('height')}p" if f.get("height") else "")
+            fps = f.get("fps") or ""
+
+            vcodec = f.get("vcodec")
+            acodec = f.get("acodec")
+            codec = f"{vcodec or 'none'} / {acodec or 'none'}"
+
+            if vcodec != "none" and acodec != "none":
+                flux_type = "Muxé"
+            elif vcodec != "none":
+                flux_type = "Vidéo seule"
+            elif acodec != "none":
+                flux_type = "Audio seule"
+            else:
+                flux_type = "Autre"
+
+            bitrate_parts = []
+            if f.get("vbr"): bitrate_parts.append(f"v:{f['vbr']}")
+            if f.get("abr"): bitrate_parts.append(f"a:{f['abr']}")
+            if f.get("tbr"): bitrate_parts.append(f"t:{f['tbr']}")
+            bitrate = " / ".join(bitrate_parts)
+
+            filesize = f.get("filesize") or f.get("filesize_approx") or ""
+            if isinstance(filesize, (int, float)):
+                filesize = f"{round(filesize / (1024*1024), 2)} MB"
+
+            rows.append([
+                flux_type, resolution, bitrate, ext, filesize, fps,
+                codec, f.get("format") or "", format_id, f.get("protocol") or ""
+            ])
+
+        return headers, rows
