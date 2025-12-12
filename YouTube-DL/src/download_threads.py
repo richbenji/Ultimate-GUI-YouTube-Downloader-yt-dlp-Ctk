@@ -5,12 +5,14 @@ import os
 import threading
 import yt_dlp
 from .video_info import VideoInfo
+from .translations import get_text
 
 
 class InfoThread(threading.Thread):
-    def __init__(self, url, callback=None, error_callback=None):
+    def __init__(self, url, app, callback=None, error_callback=None):
         super().__init__()
         self.url = url
+        self.app = app
         self.callback = callback
         self.error_callback = error_callback
         self.daemon = True
@@ -23,7 +25,7 @@ class InfoThread(threading.Thread):
                     self.callback(info)
             else:
                 if self.error_callback:
-                    self.error_callback("Impossible d'obtenir les informations de la vidéo")
+                    self.error_callback(get_text("fetching_impossible", self.app.current_language))
         except Exception as e:
             if self.error_callback:
                 self.error_callback(str(e))

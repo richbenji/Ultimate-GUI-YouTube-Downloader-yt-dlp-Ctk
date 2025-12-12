@@ -30,6 +30,8 @@ TRANSLATIONS = {
         "cancel_button": "Annuler",
         "ready_status": "Prêt",
         "no_file_in_the_queue": "Aucun fichier dans la file d'attente",
+        "warning": "Attention",
+        "error": "Erreur",
 
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",
@@ -58,6 +60,7 @@ TRANSLATIONS = {
         "text_files": "Fichiers texte",
         "loaded_urls": "Chargé {count} URLs depuis le fichier",
         "file_load_error": "Erreur lors du chargement du fichier: {error}",
+        "fetching_impossible": "Impossible d'obtenir les informations de la vidéo",
 
         # Bouton de langue
         "language_button": "🌐 FR",
@@ -91,6 +94,8 @@ TRANSLATIONS = {
         "cancel_button": "Cancel",
         "ready_status": "Ready",
         "no_file_in_the_queue": "No file in the queue",
+        "warning": "Warning",
+        "error": "Error",
 
         # Batch download
         "urls_list_label": "YouTube URLs list (one per line):",
@@ -119,6 +124,7 @@ TRANSLATIONS = {
         "text_files": "Text files",
         "loaded_urls": "Loaded {count} URLs from file",
         "file_load_error": "Error loading file: {error}",
+        "fetching_impossible": "Unable to obtain video information",
 
         # Language button
         "language_button": "🌐 EN",
@@ -152,6 +158,8 @@ TRANSLATIONS = {
         "cancel_button": "Cancelar",
         "ready_status": "Listo",
         "no_file_in_the_queue": "No hay archivos en la cola",
+        "warning": "Advertencia",
+        "error": "Error",
 
         # Descarga por lotes
         "urls_list_label": "Lista de URLs de YouTube (una por línea):",
@@ -159,7 +167,7 @@ TRANSLATIONS = {
         "batch_download_button": "Descarga por lotes",
 
         # Mensajes de estado
-        "loading_video_info": "loading_video_info",
+        "loading_video_info": "Obteniendo información del video",
         "enter_valid_url": "Por favor, introduce una URL válida",
         "checking_url": "Verificando URL...",
         "video_found": "Vídeo encontrado: ",
@@ -180,6 +188,7 @@ TRANSLATIONS = {
         "text_files": "Archivos de texto",
         "loaded_urls": "Cargadas {count} URLs desde el archivo",
         "file_load_error": "Error al cargar el archivo: {error}",
+        "fetching_impossible": "No es posible obtener la información del video",
 
         # Botón de idioma
         "language_button": "🌐 ES",
@@ -213,6 +222,8 @@ TRANSLATIONS = {
         "cancel_button": "Annulla",
         "ready_status": "Pronto",
         "no_file_in_the_queue": "Nessun file nella coda",
+        "warning": "Attenzione",
+        "error": "Errore",
 
         # Download multiplo
         "urls_list_label": "Elenco di URL YouTube (uno per riga):",
@@ -241,6 +252,7 @@ TRANSLATIONS = {
         "text_files": "File di testo",
         "loaded_urls": "Caricate {count} URL dal file",
         "file_load_error": "Errore durante il caricamento del file: {error}",
+        "fetching_impossible": "Impossibile ottenere le informazioni del video",
 
         # Pulsante lingua
         "language_button": "🌐 IT",
@@ -274,6 +286,8 @@ TRANSLATIONS = {
         "cancel_button": "Abbrechen",
         "ready_status": "Bereit",
         "no_file_in_the_queue": "Keine Dateien in der Warteschlange",
+        "warning": "Warnung",
+        "error": "Fehler",
 
         # Stapel-Download
         "urls_list_label": "YouTube-URLs (eine pro Zeile):",
@@ -302,6 +316,7 @@ TRANSLATIONS = {
         "text_files": "Textdateien",
         "loaded_urls": "{count} URLs aus Datei geladen",
         "file_load_error": "Fehler beim Laden der Datei: {error}",
+        "fetching_impossible": "Es ist nicht möglich, die Videoinformationen abzurufen",
 
         # Sprachbutton
         "language_button": "🌐 DE",

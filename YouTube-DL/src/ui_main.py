@@ -27,8 +27,8 @@ class YouTubeDownloader(ctk.CTk):
         self.geometry("800x700")
 
         # Apparence
-        self.appearance_mode = "System"  # suivi du mode choisi
-        ctk.set_appearance_mode("System")  # au démarrage, suivre le système
+        self.appearance_mode = "dark"  # suivi du mode choisi
+        ctk.set_appearance_mode("dark")  # au démarrage, suivre le système
         ctk.set_default_color_theme("blue")
 
         # Dossier de sortie par défaut
@@ -60,9 +60,9 @@ class YouTubeDownloader(ctk.CTk):
             command=self.toggle_theme
         )
         self.theme_switch.grid(row=0, column=0, sticky="w", pady=(0, 5))
-        if self.appearance_mode == "Dark":
+        if self.appearance_mode == "dark":
             self.theme_switch.select()
-        elif self.appearance_mode == "Light":
+        elif self.appearance_mode == "light":
             self.theme_switch.deselect()
 
         # Langue (ligne 1)
@@ -125,11 +125,11 @@ class YouTubeDownloader(ctk.CTk):
 
     def toggle_theme(self):
         if self.theme_switch.get() == 1:
-            ctk.set_appearance_mode("Dark")
-            self.appearance_mode = "Dark"
+            ctk.set_appearance_mode("dark")
+            self.appearance_mode = "dark"
         else:
-            ctk.set_appearance_mode("Light")
-            self.appearance_mode = "Light"
+            ctk.set_appearance_mode("light")
+            self.appearance_mode = "light"
 
     def change_language(self, selected_language_name):
         for lang_code, lang_name in self.available_languages.items():

@@ -22,10 +22,19 @@ class VideoItemFrame(ctk.CTkFrame):
     """Une carte représentant une vidéo ajoutée avec sa miniature, ses options et ses infos."""
 
     def __init__(self, parent, app, info, parent_tab):
-        super().__init__(parent)
+        super().__init__(
+            parent,
+            corner_radius=10,
+            fg_color=("gray80", "gray12"),
+            #fg_color=ctk.ThemeManager.theme["CTkFrame"]["top_fg_color"],  # couleurs issues du thème
+            #border_color=("gray70", "gray30"),
+            #border_width=1
+        )
+
         self.app = app
         self.info = info
         self.parent_tab = parent_tab  # référence vers SingleDownloadTab
+        self.original_thumbnail = None  # Stocke l'image PIL originale
 
         # variables
         self.download_type = tk.StringVar(value="video")
@@ -38,16 +47,20 @@ class VideoItemFrame(ctk.CTkFrame):
         # on garde une seule ligne principale, la miniature occupera plusieurs "rows" visuellement
         # (la grille ci-dessous pour right_frame gérera la verticalité interne)
 
+        # Configuration de la ligne pour permettre l'expansion verticale
+        self.grid_rowconfigure(0, weight=0)  # La ligne principale prend tout l'espace
+
+
         # --- Colonne gauche : miniature (placeholder d'abord) ---
         self.thumb_label = ctk.CTkLabel(self, text="")
         # rowspan=3 pour que la miniature s'étende visuellement sur la hauteur des 3 sections du right_frame
-        self.thumb_label.grid(row=0, column=0, rowspan=3, sticky="nw", padx=0, pady=0)
+        self.thumb_label.grid(row=0, column=0, rowspan=3, sticky="ns", padx=10, pady=10)
         if getattr(info, "thumbnail", None):
             self._load_thumbnail_async(info.thumbnail)
 
-            # --- Colonne droite : right_frame (strictement en grid) ---
+        # --- Colonne droite : right_frame (strictement en grid) ---
         right_frame = ctk.CTkFrame(self, fg_color="transparent")
-        right_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=0)
+        right_frame.grid(row=0, column=1, sticky="nsew", padx=(0,10), pady=0)
 
         # configuration interne de right_frame : 3 lignes (titre, options, extra_info)
         right_frame.grid_columnconfigure(0, weight=1)  # colonne texte principale
@@ -151,7 +164,58 @@ class VideoItemFrame(ctk.CTkFrame):
         # placer en bas à droite : row=2, col=0 col-span pour couvrir largeur, sticky sud-est
         self.extra_info_label.grid(row=2, column=0, columnspan=2, sticky="se", padx=(0, 0), pady=(6, 4))
 
+        # Attendre que le layout soit calculé, puis redimensionner la miniature
+        self.after(100, self._initial_resize)
+
     # ------------------ Méthodes utilitaires ------------------ #
+    def _initial_resize(self):
+        """Redimensionne la miniature après que le layout initial soit calculé."""
+        if self.original_thumbnail:
+            self._resize_thumbnail()
+
+    def _resize_thumbnail(self):
+        """Redimensionne la miniature pour s'adapter à la hauteur de la frame (limitée par le texte)."""
+        if not self.original_thumbnail:
+            return
+
+        # Forcer la mise à jour du layout pour obtenir la vraie hauteur
+        self.update_idletasks()
+
+        # Obtenir la hauteur réelle de la frame (déterminée par le contenu texte)
+        frame_height = self.winfo_height()
+
+        # Si la hauteur n'est pas encore calculée (valeur 1), réessayer plus tard
+        if frame_height <= 1:
+            self.after(50, self._resize_thumbnail)
+            return
+
+        # Calculer la hauteur disponible pour la miniature (frame_height - padding)
+        available_height = frame_height - 20  # -20 pour les pady (10*2)
+
+        # Limiter à une hauteur minimale
+        available_height = max(available_height, 50)
+
+        # Calculer les dimensions en conservant le ratio
+        img = self.original_thumbnail.copy()
+        img_ratio = img.width / img.height
+
+        new_height = available_height
+        new_width = int(new_height * img_ratio)
+
+        # Limiter la largeur si nécessaire
+        max_width = 300
+        if new_width > max_width:
+            new_width = max_width
+            new_height = int(new_width / img_ratio)
+
+        # Redimensionner l'image
+        img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        ctk_img = ctk.CTkImage(light_image=img_resized, dark_image=img_resized,
+                               size=(new_width, new_height))
+
+        self.thumb_label.configure(image=ctk_img, text="")
+        self.thumb_label.image = ctk_img
+
     def _load_thumbnail_async(self, url):
         """Télécharge la miniature en arrière-plan puis l'affiche."""
         if requests is None or Image is None:
@@ -162,9 +226,8 @@ class VideoItemFrame(ctk.CTkFrame):
                 r = requests.get(url, timeout=10)
                 if r.status_code == 200:
                     img = Image.open(BytesIO(r.content)).convert("RGB")
-                    img.thumbnail((320, 180), Image.Resampling.LANCZOS)
-                    ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=img.size)
-                    self.app.after(0, lambda: self._set_thumbnail(ctk_img))
+                    self.original_thumbnail = img  # Garde l'original en haute qualité
+                    self.app.after(0, self._resize_thumbnail)  # Redimensionne après chargement
             except Exception as e:
                 print(f"Erreur miniature {url} : {e}")
 
@@ -289,6 +352,14 @@ class SingleDownloadTab:
         )
         self.check_url_btn.pack(side="left", padx=5)
 
+        # Bouton : charger une liste d’URLs depuis un fichier
+        self.load_file_btn = ctk.CTkButton(
+            url_frame,
+            text="⬆️ " + get_text("load_from_file_button", self.app.current_language),
+            command=self.load_urls_from_file
+        )
+        self.load_file_btn.pack(side="left", padx=5)
+
         # Frame qui va contenir toutes les vidéos ajoutées
         self.playlist_frame = ctk.CTkScrollableFrame(self.parent, orientation="vertical", height=100)
         self.playlist_frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -328,6 +399,7 @@ class SingleDownloadTab:
         # Champ URL
         self.url_input.configure(placeholder_text=get_text("url_placeholder", self.app.current_language))
         self.check_url_btn.configure(text="✔️ " + get_text("check_button", self.app.current_language))
+        self.load_file_btn.configure(text="⬆️ " + get_text("load_from_file_button", self.app.current_language))
 
         # texte du bouton selon l'état
         if self.is_downloading:
@@ -369,7 +441,7 @@ class SingleDownloadTab:
         """Vérifie une URL saisie et ajoute une vidéo à la liste."""
         url = self.url_input.get().strip()
         if not url:
-            messagebox.showwarning("Attention", get_text("enter_valid_url", self.app.current_language))
+            messagebox.showwarning(get_text("warning", self.app.current_language), get_text("enter_valid_url", self.app.current_language))
             return
         self.check_url_btn.configure(state="disabled")
 
@@ -379,11 +451,62 @@ class SingleDownloadTab:
 
         thread = InfoThread(
             url,
+            self.app,
             callback=lambda info: self.app.after(0, lambda: self.on_info_received(info, loading_frame)),
             error_callback=lambda err: self.app.after(0, lambda: self.on_info_error(err, loading_frame))
         )
         thread.daemon = True
         thread.start()
+
+    def load_urls_from_file(self):
+        """Charge un fichier contenant des liens et ajoute chaque vidéo automatiquement."""
+        from tkinter import filedialog
+
+        file_path = filedialog.askopenfilename(
+            title=get_text("load_urls_list", self.app.current_language),
+            filetypes=[(get_text("text_files", self.app.current_language), "*.txt")]
+        )
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                urls = [line.strip() for line in f.readlines() if line.strip()]
+        except Exception as e:
+            messagebox.showerror(get_text("error", self.app.current_language), f"Impossible de lire le fichier : {e}")
+            return
+
+        if not urls:
+            messagebox.showwarning(get_text("warning", self.app.current_language), get_text("no_valid_urls", self.app.current_language))
+            return
+
+        # désactive bouton pendant le chargement multiple
+        #self.check_url_btn.configure(state="disabled")
+        #if hasattr(self, "load_file_btn"):
+        #    self.load_file_btn.configure(state="disabled")
+
+        # Lance la récupération d'infos pour chaque URL
+        for url in urls:
+            loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
+            loading_frame.pack(fill="x", pady=5)
+
+            thread = InfoThread(
+                url,
+                self.app,
+                callback=lambda info, lf=loading_frame: self.app.after(
+                    0, lambda: self.on_info_received(info, lf)
+                ),
+                error_callback=lambda err, lf=loading_frame: self.app.after(
+                    0, lambda: self.on_info_error(err, lf)
+                )
+            )
+            thread.daemon = True
+            thread.start()
+
+        # Après lancement
+        self.single_status_label.configure(
+            text=get_text("loaded_urls", self.app.current_language, count=len(urls))
+        )
 
 
     def on_info_received(self, info, loading_frame):
@@ -415,7 +538,7 @@ class SingleDownloadTab:
     def on_info_error(self, error, loading_frame):
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
-        messagebox.showerror("Erreur", f"{get_text('error_prefix', self.app.current_language)} {error}")
+        messagebox.showerror(get_text("error", self.app.current_language), f"{get_text('error_prefix', self.app.current_language)} {error}")
 
     # ---------------- téléchargement (toggle bouton unique) ----------------
 
