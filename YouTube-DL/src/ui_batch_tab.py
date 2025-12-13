@@ -70,11 +70,11 @@ class BatchDownloadTab:
                                                 text=get_text("audio_bitrate_label", self.app.current_language)
                                                 )
         self.batch_bitrate_label.pack(side="left", padx=5)
-        self.batch_bitrate_var = tk.StringVar(value="Auto")
+        self.batch_bitrate_var = tk.StringVar(value="Best")
         self.batch_bitrate_combo = ctk.CTkComboBox(
             bitrate_frame,
             variable=self.batch_bitrate_var,
-            values=["Auto", "320 kbps", "256 kbps", "192 kbps", "128 kbps", "96 kbps", "64 kbps"]
+            values=["Best", "320 kbps", "256 kbps", "192 kbps", "128 kbps", "96 kbps", "64 kbps"]
         )
         self.batch_bitrate_combo.pack(side="left", padx=5)
 
@@ -179,6 +179,7 @@ class BatchDownloadTab:
         # lancer thread
         self.batch_download_thread = BatchDownloadThread(
             urls,
+            self.app,
             self.batch_download_type_var.get(),
             self.batch_resolution_var.get(),
             self.batch_bitrate_var.get(),

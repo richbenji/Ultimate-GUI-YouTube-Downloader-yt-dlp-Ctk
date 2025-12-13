@@ -11,6 +11,7 @@ TRANSLATIONS = {
         # Onglets
         "single_download_tab": "Téléchargement unique",
         "batch_download_tab": "Téléchargement par lot",
+        "multiple_download_tab": "Téléchargement multiple",
 
         # Interface principale
         "youtube_url": "URL YouTube:",
@@ -32,6 +33,8 @@ TRANSLATIONS = {
         "no_file_in_the_queue": "Aucun fichier dans la file d'attente",
         "warning": "Attention",
         "error": "Erreur",
+        "no_resolutions_found": "Pas de résolutions trouvées",
+        "no_bitrates_found": "Pas de bitrates trouvées",
 
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",
@@ -62,6 +65,17 @@ TRANSLATIONS = {
         "file_load_error": "Erreur lors du chargement du fichier: {error}",
         "fetching_impossible": "Impossible d'obtenir les informations de la vidéo",
 
+        # Nouveaux messages / utilisés par les threads
+        "download_canceled": "Téléchargement annulé",
+        "downloading": "Téléchargement:",
+        "remaining_time": "Temps restant:",
+        "processing_file": "Traitement du fichier...",
+        "download_failed": "Échec du téléchargement",
+        "download_started": "Téléchargement démarré",
+
+        # Titre de la popup infos vidéo
+        "video_info_title": "Informations vidéo",
+
         # Bouton de langue
         "language_button": "🌐 FR",
         "language_tooltip": "Changer la langue"
@@ -75,6 +89,7 @@ TRANSLATIONS = {
         # Tabs
         "single_download_tab": "Single Download",
         "batch_download_tab": "Batch Download",
+        "multiple_download_tab": "Multiple Download",
 
         # Main interface
         "youtube_url": "YouTube URL:",
@@ -126,6 +141,17 @@ TRANSLATIONS = {
         "file_load_error": "Error loading file: {error}",
         "fetching_impossible": "Unable to obtain video information",
 
+        # New keys used by threads
+        "download_canceled": "Download canceled",
+        "downloading": "Downloading:",
+        "remaining_time": "Remaining time:",
+        "processing_file": "Processing file...",
+        "download_failed": "Download failed",
+        "download_started": "Download started",
+
+        # Video info popup title
+        "video_info_title": "Video information",
+
         # Language button
         "language_button": "🌐 EN",
         "language_tooltip": "Change language"
@@ -139,6 +165,7 @@ TRANSLATIONS = {
         # Pestañas
         "single_download_tab": "Descarga única",
         "batch_download_tab": "Descarga por lotes",
+        "multiple_download_tab": "Descarga múltiple",
 
         # Interfaz principal
         "youtube_url": "URL de YouTube:",
@@ -190,6 +217,17 @@ TRANSLATIONS = {
         "file_load_error": "Error al cargar el archivo: {error}",
         "fetching_impossible": "No es posible obtener la información del video",
 
+        # Nuevas claves usadas por los hilos
+        "download_canceled": "Descarga cancelada",
+        "downloading": "Descargando:",
+        "remaining_time": "Tiempo restante:",
+        "processing_file": "Procesando archivo...",
+        "download_failed": "Error en la descarga",
+        "download_started": "Descarga iniciada",
+
+        # Título del popup de información de vídeo
+        "video_info_title": "Información del video",
+
         # Botón de idioma
         "language_button": "🌐 ES",
         "language_tooltip": "Cambiar idioma"
@@ -203,6 +241,7 @@ TRANSLATIONS = {
         # Schede
         "single_download_tab": "Download singolo",
         "batch_download_tab": "Download multiplo",
+        "multiple_download_tab": "Download multiplo",
 
         # Interfaccia principale
         "youtube_url": "URL di YouTube:",
@@ -254,6 +293,17 @@ TRANSLATIONS = {
         "file_load_error": "Errore durante il caricamento del file: {error}",
         "fetching_impossible": "Impossibile ottenere le informazioni del video",
 
+        # Nuove chiavi usate dai thread
+        "download_canceled": "Download annullato",
+        "downloading": "Scaricamento:",
+        "remaining_time": "Tempo rimanente:",
+        "processing_file": "Elaborazione file...",
+        "download_failed": "Download fallito",
+        "download_started": "Download avviato",
+
+        # Titolo popup informazioni video
+        "video_info_title": "Informazioni sul video",
+
         # Pulsante lingua
         "language_button": "🌐 IT",
         "language_tooltip": "Cambia lingua"
@@ -267,6 +317,7 @@ TRANSLATIONS = {
         # Registerkarten
         "single_download_tab": "Einzeldownload",
         "batch_download_tab": "Stapel-Download",
+        "multiple_download_tab": "Mehrfach-Download",
 
         # Hauptoberfläche
         "youtube_url": "YouTube-URL:",
@@ -317,6 +368,17 @@ TRANSLATIONS = {
         "loaded_urls": "{count} URLs aus Datei geladen",
         "file_load_error": "Fehler beim Laden der Datei: {error}",
         "fetching_impossible": "Es ist nicht möglich, die Videoinformationen abzurufen",
+
+        # Neue Schlüssel, die von Threads verwendet werden
+        "download_canceled": "Download abgebrochen",
+        "downloading": "Herunterladen:",
+        "remaining_time": "Verbleibende Zeit:",
+        "processing_file": "Datei wird verarbeitet...",
+        "download_failed": "Download fehlgeschlagen",
+        "download_started": "Download gestartet",
+
+        # Titel des Video-Info-Popups
+        "video_info_title": "Video-Informationen",
 
         # Sprachbutton
         "language_button": "🌐 DE",

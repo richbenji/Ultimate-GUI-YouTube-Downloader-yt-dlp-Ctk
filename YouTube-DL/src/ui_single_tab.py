@@ -38,8 +38,20 @@ class VideoItemFrame(ctk.CTkFrame):
 
         # variables
         self.download_type = tk.StringVar(value="video")
-        self.resolution = tk.StringVar(value=info.resolutions[0] if info.resolutions else "720p")
-        self.bitrate = tk.StringVar(value="Auto")
+
+        if getattr(info, "resolutions", []):
+            self.resolution = tk.StringVar(value="Best")
+        else:
+            self.resolution = tk.StringVar(
+                value=get_text("no_resolutions_found", app.current_language)
+            )
+
+        if getattr(info, "audio_bitrates", []):
+            self.bitrate = tk.StringVar(value="Best")
+        else:
+            self.bitrate = tk.StringVar(
+                value=get_text("no_bitrates_found", app.current_language)
+            )
 
         # layout principal : 2 colonnes (0 = miniature, 1 = contenu)
         self.grid_columnconfigure(0, weight=0)
@@ -134,8 +146,9 @@ class VideoItemFrame(ctk.CTkFrame):
         self.resolution_label = ctk.CTkLabel(res_frame,
                                              text=get_text("resolution_label", app.current_language))
         self.resolution_label.pack(side="left", padx=6)
-        values_res = getattr(info, "resolutions", None) or ["1080p", "720p", "480p", "360p"]
-        self.resolution_combo = ctk.CTkComboBox(res_frame, variable=self.resolution, values=values_res)
+        resolutions = getattr(info, "resolutions", None)
+        resolutions_values = ["Best"] + resolutions
+        self.resolution_combo = ctk.CTkComboBox(res_frame, variable=self.resolution, values=resolutions_values)
         self.resolution_combo.set(self.resolution.get())
         self.resolution_combo.pack(side="left", padx=6)
 
@@ -144,11 +157,11 @@ class VideoItemFrame(ctk.CTkFrame):
         br_frame.pack(fill="x", pady=(0, 6))
         self.bitrate_label = ctk.CTkLabel(br_frame, text=get_text("audio_bitrate_label", app.current_language))
         self.bitrate_label.pack(side="left", padx=6)
-        bitrates = getattr(info, "audio_bitrates", [])
-        bitrate_values = ["Auto"] + [f"{int(b)} kbps" for b in bitrates]
+        bitrates = getattr(info, "audio_bitrates", None)
+        bitrate_values = ["Best"] + [f"{int(b)} kbps" for b in bitrates]
         self.bitrate_combo = ctk.CTkComboBox(br_frame, variable=self.bitrate, values=bitrate_values)
-        # default = Auto
-        self.bitrate_combo.set(self.bitrate.get() or "Auto")
+        # default = Best
+        self.bitrate_combo.set(self.bitrate.get() or "Best")
         self.bitrate_combo.pack(side="left", padx=6)
 
         # --- Ligne 2 : durée + taille alignées à droite en bas ---
@@ -254,12 +267,15 @@ class VideoItemFrame(ctk.CTkFrame):
         return f"{h:02d}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
 
     def get_options(self):
+        res = self.resolution_combo.get()
+        br = self.bitrate_combo.get()
+
         return {
             "url": getattr(self.info, "url", None),
             "title": getattr(self.info, "title", None),
             "type": self.download_type.get(),
-            "resolution": self.resolution_combo.get(),
-            "bitrate": self.bitrate_combo.get()
+            "resolution": None if res == "Best" else res,
+            "bitrate": None if br == "Best" else br
         }
 
     def refresh_texts(self):
@@ -588,6 +604,7 @@ class SingleDownloadTab:
 
             thread = DownloadThread(
                 opts["url"],
+                self.app,
                 opts["type"],
                 opts["resolution"],
                 opts["bitrate"],
@@ -596,6 +613,7 @@ class SingleDownloadTab:
                 status_callback=make_status_cb(),
                 finished_callback=make_finished_cb(tref)
             )
+
             # bind le thread dans la référence et initialiser sa progression à 0
             tref['t'] = thread
             self._thread_progress[thread] = 0

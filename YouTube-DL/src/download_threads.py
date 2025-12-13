@@ -1,6 +1,4 @@
 # src/download_threads.py
-"""Threads de récupération d'info et de téléchargement (single & batch)."""
-
 import os
 import threading
 import yt_dlp
@@ -8,6 +6,13 @@ from .video_info import VideoInfo
 from .translations import get_text
 
 
+# ------------ Exception spéciale pour une annulation propre ------------
+class DownloadCancelled(Exception):
+    """Exception interne utilisée pour signaler une annulation propre."""
+    pass
+
+
+# =========================== INFO THREAD ===============================
 class InfoThread(threading.Thread):
     def __init__(self, url, app, callback=None, error_callback=None):
         super().__init__()
@@ -26,99 +31,178 @@ class InfoThread(threading.Thread):
             else:
                 if self.error_callback:
                     self.error_callback(get_text("fetching_impossible", self.app.current_language))
+
         except Exception as e:
             if self.error_callback:
                 self.error_callback(str(e))
 
 
+# ======================== DOWNLOAD THREAD =============================
 class DownloadThread(threading.Thread):
-    def __init__(self, url, download_type, resolution, bitrate, output_path,
+    def __init__(self, url, app, download_type, resolution, bitrate, output_path,
                  progress_callback=None, status_callback=None, finished_callback=None):
+        """
+        Thread qui télécharge soit :
+            - une vidéo + audio (download_type = 'video')
+            - un fichier audio seul (download_type = 'audio')
+
+        progress_callback  : fonction appelée à chaque mise à jour du pourcentage
+        status_callback    : fonction appelée pour afficher un texte de statut (vitesse, ETA…)
+        finished_callback  : fonction appelée lorsqu'un téléchargement se termine
+        """
+
         super().__init__()
         self.url = url
-        self.download_type = download_type  # "video" or "audio"
+        self.app = app
+        self.download_type = download_type
         self.resolution = resolution
         self.bitrate = bitrate
         self.output_path = output_path
+
         self.progress_callback = progress_callback
         self.status_callback = status_callback
         self.finished_callback = finished_callback
+
+        # Permet d'annuler un téléchargement proprement
         self.is_cancelled = False
         self.daemon = True
 
+    # ----- Hook de progression -----
     def progress_hook(self, d):
+        """
+         d est un dictionnaire envoyé directement par yt-dlp.
+         Il contient :
+             - d["status"]       -> "downloading" ou "finished"
+             - d["_percent_str"] -> "32.1%"
+             - d["_speed_str"]   -> "1.2MiB/s"
+             - d["_eta_str"]     -> "00:12"
+         """
+
+        # Gestion de l'annulation
         if self.is_cancelled:
-            raise Exception("Téléchargement annulé")
+            # On arrête proprement le téléchargement
+            raise DownloadCancelled()
 
         status = d.get('status', '')
         if status == 'downloading':
+            # Pourcentage brut envoyé à la barre de progression
             pct_str = d.get('_percent_str', '0%').replace('%', '').strip()
             try:
                 pct = float(pct_str)
             except Exception:
                 pct = 0.0
+
             if self.progress_callback:
                 self.progress_callback(int(pct))
+
             if self.status_callback:
-                self.status_callback(f"Téléchargement: {d.get('_speed_str', '')} - Temps restant: {d.get('_eta_str', '')}")
+                self.status_callback(
+                    f"{get_text('downloading', self.app.current_language)} "
+                    f"{d.get('_speed_str', '')} - "
+                    f"{get_text('remaining_time', self.app.current_language)} {d.get('_eta_str', '')}"
+                )
+
         elif status == 'finished':
+            # Quand yt-dlp a tout téléchargé
             if self.progress_callback:
                 self.progress_callback(100)
             if self.status_callback:
-                self.status_callback("Traitement du fichier...")
+                self.status_callback(get_text("processing_file", self.app.current_language))
 
+    # ----- Exécution -----
     def run(self):
         try:
+            # ---------- Construction des options yt-dlp ----------
+
+            # ----- VIDEO + AUDIO -----
+
             if self.download_type == "video":
-                height = self.resolution[:-1] if self.resolution and self.resolution.endswith('p') else None
-                format_str = f'bestvideo[ext=mp4]'
+
+                # Nettoyage "1080p" -> "1080"
+                if self.resolution is None:
+                    height = None
+                else:
+                    height = self.resolution[:-1]
+
+                # Format vidéo : télécharge directement à la résolution demandée
                 if height:
                     format_str = f'bestvideo[height<={height}][ext=mp4]'
-
-                if self.bitrate and self.bitrate != "Auto":
-                    bitrate_val = self.bitrate.replace(" kbps", "")
-                    format_str += f'+bestaudio[abr<={bitrate_val+10}][abr>={bitrate_val-10}]/bestaudio[ext=m4a]'
                 else:
-                    format_str += '+bestaudio[ext=m4a]'
+                    format_str = f'bestvideo[ext=mp4]'
 
-                format_str += f'/best'  # fallback
+                # Audio : si bitrate choisi par l'utilisateur
+                if self.bitrate is None:
+                    # Best audio (AAC / m4a de préférence)
+                    format_str += '+bestaudio[ext=m4a]/bestaudio'
+                else:
+                    bitrate_val = int(self.bitrate.replace(" kbps", ""))
+                    low = bitrate_val - 10
+                    high = bitrate_val + 10
+
+                    format_str += (  # += AJOUTE à format_str
+                        f'+bestaudio[abr>={low}][abr<={high}][ext=m4a]'
+                        f'/bestaudio[ext=m4a]'
+                    )
 
                 ydl_opts = {
-                    'format': format_str,
+                    'format': format_str + '/best',
                     'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                    'progress_hooks': [self.progress_hook],
+                    'progress_hooks': [self.progress_hook],  # permet de suivre l'avancement du téléchargement
                     'quiet': True,
                     'no_warnings': True,
                     'merge_output_format': 'mp4',
-                    'nooverwrites': True
-                }
-            else:  # audio
-                preferred_quality = self.bitrate.replace(" kbps", "") if (self.bitrate and self.bitrate != "Auto") else "192"
-                ydl_opts = {
-                    'format': 'bestaudio/best',
-                    'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                    'progress_hooks': [self.progress_hook],
-                    'postprocessors': [{
-                        'key': 'FFmpegExtractAudio',
-                        'preferredcodec': 'mp3',
-                        'preferredquality': preferred_quality,
-                    }],
-                    'quiet': True,
-                    'no_warnings': True,
-                    'nooverwrites': True
+                    'nooverwrites': True  # évite d'écraser accidentellement des fichiers existants
                 }
 
+            # ----- AUDIO ONLY -----
+
+            else:
+
+                # Choix qualité audio
+                if self.bitrate is None:
+                    preferred_quality = '0'  # qualité source (pas de forçage)
+                else:
+                    preferred_quality = self.bitrate.replace(" kbps", "")
+
+                ydl_opts = {
+                    'format': 'bestaudio/best',  # Meilleur audio disponible
+                    'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
+                    'progress_hooks': [self.progress_hook],  # permet de suivre l'avancement du téléchargement
+
+                    # Post-processing via FFmpeg : convertit en MP3
+                    'postprocessors': [{
+                        'key': 'FFmpegExtractAudio',  # Extraire l'audio
+                        'preferredcodec': 'mp3',  # Convertir en MP3
+                        'preferredquality': preferred_quality,  # Qualité choisie
+                    }],
+
+                    'quiet': True,
+                    'no_warnings': True,
+                    'nooverwrites': True  # évite d'écraser accidentellement des fichiers existants
+                }
+
+            # ---------- Téléchargement ----------
+            # Lancement réel du téléchargement
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.url])
 
             if self.status_callback:
-                self.status_callback("Téléchargement terminé")
+                self.status_callback(get_text("download_complete", self.app.current_language))
+
             if self.finished_callback:
                 self.finished_callback(True)
 
+        # -------- Annulation propre --------
+        except DownloadCancelled:
+            if self.status_callback:
+                self.status_callback(get_text("download_canceled", self.app.current_language))
+            if self.finished_callback:
+                self.finished_callback(False)
+
+        # -------- Erreur réelle --------
         except Exception as e:
             if self.status_callback:
-                self.status_callback(f"Erreur: {e}")
+                self.status_callback(f"{get_text('error_prefix', self.app.current_language)} {e}")
             if self.finished_callback:
                 self.finished_callback(False)
 
@@ -126,11 +210,14 @@ class DownloadThread(threading.Thread):
         self.is_cancelled = True
 
 
+
+# ========================= BATCH DOWNLOAD THREAD ========================
 class BatchDownloadThread(threading.Thread):
-    def __init__(self, urls, download_type, resolution, bitrate, output_path,
+    def __init__(self, urls, app, download_type, resolution, bitrate, output_path,
                  progress_callback=None, status_callback=None, finished_callback=None):
         super().__init__()
         self.urls = urls
+        self.app = app
         self.download_type = download_type
         self.resolution = resolution
         self.bitrate = bitrate
@@ -140,15 +227,14 @@ class BatchDownloadThread(threading.Thread):
         self.finished_callback = finished_callback
         self.is_cancelled = False
         self.daemon = True
+        self._total_urls = max(1, len(urls))
 
-        # variables d'état interne
-        self._total_urls = max(1, len(self.urls))
-
+    # ----- Hook fabriqué pour chaque fichier -----
     def _progress_hook_factory(self, base_percent):
-        """Retourne une closure qui transforme le percent courant en percent global."""
         def hook(d):
             if self.is_cancelled:
-                raise Exception("Téléchargement annulé")
+                raise DownloadCancelled()
+
             status = d.get('status', '')
             if status == 'downloading':
                 pct_str = d.get('_percent_str', '0%').replace('%', '').strip()
@@ -156,64 +242,68 @@ class BatchDownloadThread(threading.Thread):
                     pct = float(pct_str)
                 except Exception:
                     pct = 0.0
-                # base_percent est la part complétée avant ce fichier (0..100)
-                total = base_percent + (pct / self._total_urls)
+
+                total_pct = base_percent + (pct / self._total_urls)
+
                 if self.progress_callback:
-                    self.progress_callback(int(total))
+                    self.progress_callback(int(total_pct))
+
                 if self.status_callback:
-                    filename = d.get('filename', '') or ''
-                    filename = filename.split('/')[-1].split('\\')[-1]
-                    self.status_callback(f"Fichier: {filename} - {d.get('_speed_str', '')} - Temps restant: {d.get('_eta_str', '')}")
+                    fname = d.get('filename', '').split('/')[-1]
+                    self.status_callback(f"{fname} - {d.get('_speed_str', '')} - {d.get('_eta_str', '')}")
+
             elif status == 'finished':
-                # quand un fichier est fini, on peut pousser la progression du fichier à son maximum local
                 if self.progress_callback:
-                    self.progress_callback(int(min(100, (base_percent + (100 / self._total_urls)))))
+                    self.progress_callback(int(base_percent + (100 / self._total_urls)))
+
         return hook
 
+    # ----- Exécution -----
     def run(self):
         successful = 0
-        failed = 0
 
-        for i, url in enumerate(self.urls):
-            if self.is_cancelled:
+        try:
+            for i, raw_url in enumerate(self.urls):
+                if self.is_cancelled:
+                    raise DownloadCancelled()
+
+                url = raw_url.strip()
+                if not url:
+                    continue
+
+                # Info de progression
                 if self.status_callback:
-                    self.status_callback("Téléchargement annulé")
-                if self.finished_callback:
-                    self.finished_callback(False)
-                return
+                    self.status_callback(
+                        f"{get_text('checking_url', self.app.current_language)} ({i+1}/{self._total_urls}) : {url}"
+                    )
 
-            url = url.strip()
-            if not url:
-                continue
+                base_percent = (i * 100) / self._total_urls
 
-            base_percent = (i * 100) / self._total_urls
-
-            try:
-                if self.status_callback:
-                    self.status_callback(f"Traitement URL ({i+1}/{self._total_urls}): {url}")
-
-                # construire options comme pour DownloadThread
+                # ----- Construction des options -----
                 if self.download_type == "video":
                     height = self.resolution[:-1] if (self.resolution and self.resolution.endswith('p')) else None
                     format_str = 'bestvideo[ext=mp4]'
                     if height:
                         format_str = f'bestvideo[height<={height}][ext=mp4]'
-                    if self.bitrate and self.bitrate != "Auto":
+
+                    if self.bitrate and self.bitrate != "Best":
                         bitrate_val = self.bitrate.replace(" kbps", "")
-                        format_str += f'+bestaudio[abr<={bitrate_val+10}][abr>={bitrate_val-10}]/bestaudio[ext=m4a]'
+                        format_str += f'+bestaudio[abr<={bitrate_val}+10][abr>={bitrate_val}-10]/bestaudio[ext=m4a]'
                     else:
                         format_str += '+bestaudio[ext=m4a]'
-                    format_str += '/best'
+
                     ydl_opts = {
-                        'format': format_str,
+                        'format': format_str + '/best',
                         'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
                         'progress_hooks': [self._progress_hook_factory(base_percent)],
                         'quiet': True,
                         'no_warnings': True,
                         'merge_output_format': 'mp4'
                     }
+
                 else:
-                    preferred_quality = self.bitrate.replace(" kbps", "") if (self.bitrate and self.bitrate != "Auto") else "192"
+                    preferred_quality = self.bitrate.replace(" kbps", "") if (self.bitrate and self.bitrate != "Best") else "192"
+
                     ydl_opts = {
                         'format': 'bestaudio/best',
                         'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
@@ -224,26 +314,38 @@ class BatchDownloadThread(threading.Thread):
                             'preferredquality': preferred_quality,
                         }],
                         'quiet': True,
-                        'no_warnings': True,
+                        'no_warnings': True
                     }
 
+                # ----- Téléchargement -----
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.download([url])
 
                 successful += 1
 
-            except Exception as e:
-                failed += 1
-                if self.status_callback:
-                    self.status_callback(f"Erreur avec {url}: {e}")
+            # -- Fin par lot --
+            if self.progress_callback:
+                self.progress_callback(100)
 
-        # fin de boucle
-        if self.progress_callback:
-            self.progress_callback(100)
-        if self.status_callback:
-            self.status_callback(f"Téléchargement par lot terminé. {successful}/{self._total_urls} fichiers téléchargés avec succès.")
-        if self.finished_callback:
-            self.finished_callback(True)
+            if self.status_callback:
+                self.status_callback(get_text("batch_download_complete", self.app.current_language))
+
+            if self.finished_callback:
+                self.finished_callback(True)
+
+        # ----- Annulation propre -----
+        except DownloadCancelled:
+            if self.status_callback:
+                self.status_callback(get_text("canceling_batch_download", self.app.current_language))
+            if self.finished_callback:
+                self.finished_callback(False)
+
+        # ----- Erreurs réelles -----
+        except Exception as e:
+            if self.status_callback:
+                self.status_callback(f"{get_text('error_prefix', self.app.current_language)} {e}")
+            if self.finished_callback:
+                self.finished_callback(False)
 
     def cancel(self):
         self.is_cancelled = True
