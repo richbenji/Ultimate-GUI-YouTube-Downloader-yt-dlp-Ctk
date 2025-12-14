@@ -25,6 +25,7 @@ TRANSLATIONS = {
         "choose_resolution": "Choisir une résolution",
         "download_folder": "Téléchargements",
         "audio_bitrate_label": "Bitrate audio:",
+        "audio_format_label": "Format audio",
         "output_folder_label": "Dossier de sortie:",
         "browse_button": "Parcourir",
         "download_button": "Télécharger",

@@ -39,7 +39,7 @@ class InfoThread(threading.Thread):
 
 # ======================== DOWNLOAD THREAD =============================
 class DownloadThread(threading.Thread):
-    def __init__(self, url, app, download_type, resolution, bitrate, output_path,
+    def __init__(self, url, app, download_type, resolution, bitrate, audio_format, output_path,
                  progress_callback=None, status_callback=None, finished_callback=None):
         """
         Thread qui télécharge soit :
@@ -57,6 +57,7 @@ class DownloadThread(threading.Thread):
         self.download_type = download_type
         self.resolution = resolution
         self.bitrate = bitrate
+        self.audio_format = audio_format
         self.output_path = output_path
 
         self.progress_callback = progress_callback
@@ -158,28 +159,46 @@ class DownloadThread(threading.Thread):
 
             else:
 
-                # Choix qualité audio
-                if self.bitrate is None:
-                    preferred_quality = '0'  # qualité source (pas de forçage)
+                # ----- M4A (pas de conversion) -----
+                if self.audio_format == "m4a":
+
+                    if self.bitrate is None:
+                        audio_format = 'bestaudio[ext=m4a]'
+                    else:
+                        br = int(self.bitrate.replace(" kbps", ""))
+                        audio_format = (
+                            f'bestaudio[abr>={br - 10}][abr<={br + 10}][ext=m4a]'
+                            f'/bestaudio[ext=m4a]'
+                        )
+
+                    ydl_opts = {
+                        'format': audio_format,
+                        'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
+                        'progress_hooks': [self.progress_hook],
+                        'quiet': True,
+                        'no_warnings': True,
+                        'nooverwrites': True
+                    }
+
+                # ----- MP3 (conversion volontaire) -----
                 else:
-                    preferred_quality = self.bitrate.replace(" kbps", "")
+                    preferred_quality = (
+                        self.bitrate.replace(" kbps", "") if self.bitrate else '0'
+                    )
 
-                ydl_opts = {
-                    'format': 'bestaudio/best',  # Meilleur audio disponible
-                    'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                    'progress_hooks': [self.progress_hook],  # permet de suivre l'avancement du téléchargement
-
-                    # Post-processing via FFmpeg : convertit en MP3
-                    'postprocessors': [{
-                        'key': 'FFmpegExtractAudio',  # Extraire l'audio
-                        'preferredcodec': 'mp3',  # Convertir en MP3
-                        'preferredquality': preferred_quality,  # Qualité choisie
-                    }],
-
-                    'quiet': True,
-                    'no_warnings': True,
-                    'nooverwrites': True  # évite d'écraser accidentellement des fichiers existants
-                }
+                    ydl_opts = {
+                        'format': 'bestaudio[ext=m4a]/bestaudio',
+                        'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
+                        'progress_hooks': [self.progress_hook],
+                        'postprocessors': [{
+                            'key': 'FFmpegExtractAudio',
+                            'preferredcodec': 'mp3',
+                            'preferredquality': preferred_quality,
+                        }],
+                        'quiet': True,
+                        'no_warnings': True,
+                        'nooverwrites': True
+                    }
 
             # ---------- Téléchargement ----------
             # Lancement réel du téléchargement

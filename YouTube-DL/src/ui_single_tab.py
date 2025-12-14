@@ -36,7 +36,7 @@ class VideoItemFrame(ctk.CTkFrame):
         self.parent_tab = parent_tab  # référence vers SingleDownloadTab
         self.original_thumbnail = None  # Stocke l'image PIL originale
 
-        # variables
+        # ---------------- Variables ----------------
         self.download_type = tk.StringVar(value="video")
 
         if getattr(info, "resolutions", []):
@@ -52,6 +52,9 @@ class VideoItemFrame(ctk.CTkFrame):
             self.bitrate = tk.StringVar(
                 value=get_text("no_bitrates_found", app.current_language)
             )
+
+        # ---------------- UI ----------------
+        self.audio_format = tk.StringVar(value="m4a")
 
         # layout principal : 2 colonnes (0 = miniature, 1 = contenu)
         self.grid_columnconfigure(0, weight=0)
@@ -164,6 +167,41 @@ class VideoItemFrame(ctk.CTkFrame):
         self.bitrate_combo.set(self.bitrate.get() or "Best")
         self.bitrate_combo.pack(side="left", padx=6)
 
+        # Format audio (uniquement pour Audio only)
+        format_frame = ctk.CTkFrame(opts_container, fg_color="transparent")
+        format_frame.pack(fill="x", pady=(0, 6))
+
+        self.audio_format_label = ctk.CTkLabel(
+            format_frame,
+            text=get_text("audio_format_label", app.current_language)
+        )
+        self.audio_format_label.pack(side="left", padx=6)
+
+        self.audio_format_combo = ctk.CTkComboBox(
+            format_frame,
+            variable=self.audio_format,
+            values=["m4a", "mp3"],
+            width=100
+        )
+        self.audio_format_combo.pack(side="left", padx=6)
+
+        def _update_ui_for_download_type(*_):
+            """Active/désactive les options selon le type de téléchargement."""
+            if self.download_type.get() == "video":
+                # Mode VIDÉO : résolution active, format audio grisé
+                self.resolution_combo.configure(state="normal")
+                self.audio_format_combo.configure(state="disabled")
+            else:
+                # Mode AUDIO : résolution grisée, format audio actif
+                self.resolution_combo.configure(state="disabled")
+                self.audio_format_combo.configure(state="normal")
+
+        # Lier au changement du radio button Video / Audio
+        self.download_type.trace_add("write", _update_ui_for_download_type)
+
+        # Appel initial pour synchroniser l'état au démarrage
+        _update_ui_for_download_type()
+
         # --- Ligne 2 : durée + taille alignées à droite en bas ---
         duration_str = self._format_duration(getattr(info, "duration", 0))
         size_str = self._get_size_string(info)
@@ -269,6 +307,15 @@ class VideoItemFrame(ctk.CTkFrame):
     def get_options(self):
         res = self.resolution_combo.get()
         br = self.bitrate_combo.get()
+
+        return {
+            "url": getattr(self.info, "url", None),
+            "title": getattr(self.info, "title", None),
+            "type": self.download_type.get(),
+            "resolution": None if res == "Best" else res,
+            "bitrate": None if br == "Best" else br,
+            "audio_format": self.audio_format.get()
+        }
 
         return {
             "url": getattr(self.info, "url", None),
@@ -608,6 +655,7 @@ class SingleDownloadTab:
                 opts["type"],
                 opts["resolution"],
                 opts["bitrate"],
+                opts["audio_format"],
                 output_path,
                 progress_callback=make_progress_cb(tref),
                 status_callback=make_status_cb(),
