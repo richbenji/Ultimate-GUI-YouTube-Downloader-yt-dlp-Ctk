@@ -158,6 +158,8 @@ class VideoItemFrame(ctk.CTkFrame):
         # Bitrate
         br_frame = ctk.CTkFrame(opts_container, fg_color="transparent")
         br_frame.pack(fill="x", pady=(0, 6))
+
+        # Bitrate (à gauche)
         self.bitrate_label = ctk.CTkLabel(br_frame, text=get_text("audio_bitrate_label", app.current_language))
         self.bitrate_label.pack(side="left", padx=6)
         bitrates = getattr(info, "audio_bitrates", None)
@@ -167,23 +169,27 @@ class VideoItemFrame(ctk.CTkFrame):
         self.bitrate_combo.set(self.bitrate.get() or "Best")
         self.bitrate_combo.pack(side="left", padx=6)
 
-        # Format audio (uniquement pour Audio only)
-        format_frame = ctk.CTkFrame(opts_container, fg_color="transparent")
-        format_frame.pack(fill="x", pady=(0, 6))
-
+        # Format audio (à droite sur la même ligne ; uniquement pour Audio only)
         self.audio_format_label = ctk.CTkLabel(
-            format_frame,
+            br_frame,
             text=get_text("audio_format_label", app.current_language)
         )
-        self.audio_format_label.pack(side="left", padx=6)
+        self.audio_format_label.pack(side="left", padx=(20, 6))  # 20px d'espace à gauche pour séparer
 
         self.audio_format_combo = ctk.CTkComboBox(
-            format_frame,
+            br_frame,
             variable=self.audio_format,
             values=["m4a", "mp3"],
             width=100
         )
         self.audio_format_combo.pack(side="left", padx=6)
+
+        self.resolution_combo.configure(command=lambda _: self.refresh_size_display())
+        self.bitrate_combo.configure(command=lambda _: self.refresh_size_display())
+
+        self.download_type.trace_add("write", lambda *_: self.refresh_size_display())
+
+        self.after(200, self.refresh_size_display)  # init
 
         def _update_ui_for_download_type(*_):
             """Active/désactive les options selon le type de téléchargement."""
@@ -304,6 +310,68 @@ class VideoItemFrame(ctk.CTkFrame):
         h, m = divmod(m, 60)
         return f"{h:02d}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
 
+    def _select_video_format(self):
+        videos = self.info.get_video_formats_mp4()
+        if not videos:
+            return None
+
+        res = self.resolution_combo.get()
+
+        if res == "Best":
+            return max(videos, key=lambda f: f["height"])
+
+        height = int(res[:-1])  # "1080p" → 1080
+        eligible = [f for f in videos if f["height"] <= height]
+
+        return max(eligible, key=lambda f: f["height"]) if eligible else None
+
+    def _select_audio_format(self):
+        audios = self.info.get_audio_formats_m4a()
+        if not audios:
+            return None
+
+        br = self.bitrate_combo.get()
+
+        if br == "Best":
+            return max(audios, key=lambda f: f["abr"])
+
+        target = int(br.replace(" kbps", ""))
+        eligible = [f for f in audios if abs(f["abr"] - target) <= 10]
+
+        return max(eligible, key=lambda f: f["abr"]) if eligible else None
+
+    def compute_selected_size(self):
+        total = 0
+
+        if self.download_type.get() == "video":
+            video = self._select_video_format()
+            audio = self._select_audio_format()
+
+            if video:
+                total += video["filesize"]
+            if audio:
+                total += audio["filesize"]
+
+        else:  # AUDIO ONLY
+            audio = self._select_audio_format()
+            if audio:
+                total += audio["filesize"]  # MP3 = taille du M4A source
+
+        return total
+
+    def refresh_size_display(self):
+        size = self.compute_selected_size()
+        size_mb = size / (1024 * 1024)
+
+        duration = self._format_duration(getattr(self.info, "duration", 0))
+        self.extra_info_label.configure(
+            text=f"⏱ {duration}   |   💾 {size_mb:.2f} MB"
+        )
+
+        # prévenir l’onglet parent
+        if hasattr(self.parent_tab, "refresh_download_button"):
+            self.parent_tab.refresh_download_button()
+
     def get_options(self):
         res = self.resolution_combo.get()
         br = self.bitrate_combo.get()
@@ -394,6 +462,7 @@ class SingleDownloadTab:
         self._thread_progress = {}      # mapping thread -> percent (0..100)
         self.placeholder_label = None  # label par défaut
         self.is_downloading = False  # 🔑 nouvel état
+        self._download_results = []  # liste de True / False
         self.build_ui()
 
     def build_ui(self):
@@ -481,6 +550,9 @@ class SingleDownloadTab:
         for vf in self.video_frames:
             if hasattr(vf, "refresh_texts"):
                 vf.refresh_texts()
+
+        # Bouton télécharger
+        self.refresh_download_button()
 
     def show_placeholder(self):
         """Affiche le texte 'Aucun fichier' si la file est vide."""
@@ -571,7 +643,6 @@ class SingleDownloadTab:
             text=get_text("loaded_urls", self.app.current_language, count=len(urls))
         )
 
-
     def on_info_received(self, info, loading_frame):
         loading_frame.stop()
         self.hide_placeholder()
@@ -582,6 +653,8 @@ class SingleDownloadTab:
 
         self.url_input.delete(0, "end")
         self.check_url_btn.configure(state="normal")
+
+        self.refresh_download_button()
 
         # si au moins un fichier -> activer le bouton (si pas en téléchargement)
         if not self.is_downloading:
@@ -598,6 +671,8 @@ class SingleDownloadTab:
             if not self.is_downloading:
                 self.download_btn.configure(state="disabled")
 
+        self.refresh_download_button()
+
     def on_info_error(self, error, loading_frame):
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
@@ -605,7 +680,28 @@ class SingleDownloadTab:
 
     # ---------------- téléchargement (toggle bouton unique) ----------------
 
+    def compute_total_size(self):
+        return sum(vf.compute_selected_size() for vf in self.video_frames)
+
+    def refresh_download_button(self):
+        if not self.video_frames:
+            self.download_btn.configure(
+                text="⬇️ " + get_text("download_button", self.app.current_language),
+                state="disabled"
+            )
+            return
+
+        total = self.compute_total_size()
+        mb = total / (1024 * 1024)
+
+        self.download_btn.configure(
+            text=f"⬇️ {get_text('download_button', self.app.current_language)} – {mb:.2f} MB",
+            state="normal" if not self.is_downloading else "normal"
+        )
+
     def start_download_all(self):
+        self._download_results.clear()
+
         """Démarre tous les téléchargements et transforme le bouton en 'Annuler'."""
         if not self.video_frames:
             return
@@ -697,29 +793,44 @@ class SingleDownloadTab:
         self.single_progress_bar.set(avg / 100.0)
 
     def _on_thread_finished(self, thread, success):
-        # marque la thread comme 100% (sécurité)
+        # mémorise le résultat
+        self._download_results.append(success)
         self._thread_progress[thread] = 100
 
-        # si tous les threads sont terminés -> reset UI
+        # si tous les threads sont terminés
         if all(not t.is_alive() for t in self.active_threads):
+
             self.is_downloading = False
+
             # remettre le bouton en mode Télécharger
-            self.download_btn.configure(text="⬇️ " + get_text("download_button", self.app.current_language),
-                                        command=self.start_download_all,
-                                        state="normal"
-                                        )
+            self.download_btn.configure(
+                text="⬇️ " + get_text("download_button", self.app.current_language),
+                command=self.start_download_all,
+                state="normal"
+            )
             self.check_url_btn.configure(state="normal")
-            # final UI
             self.single_progress_bar.set(1)
-        if success:
-            self.single_status_label.configure(text=get_text("download_complete", self.app.current_language))
-            try:
-                messagebox.showinfo(get_text("download_complete", self.app.current_language),
-                                    get_text("download_complete_message", self.app.current_language))
-            except Exception:
-                pass
-        else:
-            self.single_status_label.configure(text=get_text("download_failed", self.app.current_language))
+
+            # -------- POPUP UNIQUE --------
+            if all(self._download_results):
+                self.single_status_label.configure(
+                    text=get_text("download_complete", self.app.current_language)
+                )
+                messagebox.showinfo(
+                    get_text("download_complete", self.app.current_language),
+                    get_text("download_complete_message", self.app.current_language)
+                )
+            else:
+                self.single_status_label.configure(
+                    text=get_text("download_failed", self.app.current_language)
+                )
+                messagebox.showwarning(
+                    get_text("download_failed", self.app.current_language),
+                    get_text("download_failed_message", self.app.current_language)
+                )
+
+            # reset pour le prochain batch
+            self._download_results.clear()
 
 class LoadingItemFrame(ctk.CTkFrame):
     """Frame temporaire affichée pendant le chargement des infos d'une vidéo."""

@@ -236,3 +236,25 @@ class VideoInfo:
             ])
 
         return headers, rows
+
+        # ---------- VIDEO MP4 ----------
+
+    def get_video_formats_mp4(self):
+        return [
+            f for f in self.formats
+            if f.get("ext") == "mp4"
+               and f.get("vcodec") != "none"
+               and f.get("filesize")
+               and f.get("height")
+        ]
+
+        # ---------- AUDIO M4A ----------
+
+    def get_audio_formats_m4a(self):
+        return [
+            f for f in self.formats
+            if f.get("ext") == "m4a"
+               and f.get("acodec") != "none"
+               and f.get("filesize")
+               and f.get("abr")
+        ]
