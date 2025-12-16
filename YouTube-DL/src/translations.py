@@ -56,9 +56,10 @@ TRANSLATIONS = {
 
         # Messages de dialogue
         "download_complete": "Téléchargement terminé",
-        "download_complete_message": "Le téléchargement a été complété avec succès!",
+        "download_complete_message": "Le téléchargement a été complété avec succès !",
+        "partial_download_message": "Certains fichiers n'ont pas été téléchargés",
         "batch_download_complete": "Téléchargement par lot terminé",
-        "batch_download_complete_message": "Le téléchargement par lot a été complété!",
+        "batch_download_complete_message": "Le téléchargement par lot a été complété avec succès !",
         "select_output_folder": "Sélectionner un dossier de sortie",
         "load_urls_list": "Charger une liste d'URLs",
         "text_files": "Fichiers texte",
