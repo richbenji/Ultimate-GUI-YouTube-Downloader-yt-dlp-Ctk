@@ -100,7 +100,7 @@ class DownloadThread(threading.Thread):
                 self.status_callback(
                     f"{get_text('downloading', self.app.current_language)} "
                     f"{d.get('_speed_str', '')} - "
-                    f"{get_text('remaining_time', self.app.current_language)} {d.get('_eta_str', '')}"
+                    f"{get_text('remaining_time', self.app.current_language)} {d.get('_eta_str', '')}"  # temps restant
                 )
 
         elif status == 'finished':

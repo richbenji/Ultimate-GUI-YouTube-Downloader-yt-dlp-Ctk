@@ -3,6 +3,7 @@ import customtkinter as ctk
 from tkinter import messagebox, ttk
 from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
+from .playlist_utils import extract_playlist_entries
 from .utils import ask_output_folder
 
 
@@ -672,7 +673,8 @@ class SingleDownloadTab:
         self.placeholder_label = None  # label par défaut
         self.is_downloading = False  # 🔑 nouvel état
         self._download_results = []  # liste de True / False
-        self._expected_threads = 0
+        self._expected_threads = 0  # Total à télécharger
+        self._finished_threads = 0  # terminés
         self.build_ui()
 
     def build_ui(self):
@@ -783,25 +785,97 @@ class SingleDownloadTab:
     # ---------------- URL check / ajout ----------------
 
     def check_url(self):
-        """Vérifie une URL saisie et ajoute une vidéo à la liste."""
+        """Vérifie une URL saisie. Si c'est une playlist, extrait toutes les vidéos."""
         url = self.url_input.get().strip()
         if not url:
-            messagebox.showwarning(get_text("warning", self.app.current_language), get_text("enter_valid_url", self.app.current_language))
+            messagebox.showwarning(
+                get_text("warning", self.app.current_language),
+                get_text("enter_valid_url", self.app.current_language)
+            )
             return
+
         self.check_url_btn.configure(state="disabled")
 
-        # On crée une frame temporaire
+        # Frame de chargement pendant l'extraction
         loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
+        loading_frame.loading_text.configure(text="Analyse de l'URL...")
         loading_frame.pack(fill="x", pady=5)
 
-        thread = InfoThread(
-            url,
-            self.app,
-            callback=lambda info: self.app.after(0, lambda: self.on_info_received(info, loading_frame)),
-            error_callback=lambda err: self.app.after(0, lambda: self.on_info_error(err, loading_frame))
+        # Extraction en arrière-plan
+        def extract_and_add():
+            try:
+                entries = extract_playlist_entries(url)
+                # Retour sur le thread principal
+                self.app.after(0, lambda: self._on_playlist_extracted(entries, loading_frame))
+            except Exception as error:
+                # Capturer l'erreur dans une variable locale
+                error_msg = str(error)
+                self.app.after(0, lambda: self._on_extraction_error(error_msg, loading_frame))
+
+        threading.Thread(target=extract_and_add, daemon=True).start()
+
+    def _on_playlist_extracted(self, entries, loading_frame):
+        """Appelé quand l'extraction de playlist est terminée."""
+        loading_frame.stop()
+
+        if not entries:
+            messagebox.showwarning(
+                get_text("warning", self.app.current_language),
+                "Aucune vidéo trouvée dans cette URL."
+            )
+            self.check_url_btn.configure(state="normal")
+            return
+
+        # Afficher un message si c'est une playlist
+        if len(entries) > 1:
+            self.single_status_label.configure(
+                text=f"📋 Playlist détectée : {len(entries)} vidéos trouvées. Chargement en cours..."
+            )
+
+        # Ajouter chaque vidéo individuellement
+        for entry in entries:
+            video_url = entry.get("url")
+            if not video_url:
+                continue
+
+            # Créer une frame de chargement pour cette vidéo
+            video_loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
+            video_loading_frame.loading_text.configure(
+                text=f"⏳ {entry.get('title', 'Chargement...')}"
+            )
+            video_loading_frame.pack(fill="x", pady=5)
+
+            # Lancer la récupération des infos
+            thread = InfoThread(
+                video_url,
+                self.app,
+                callback=lambda info, lf=video_loading_frame: self.app.after(
+                    0, lambda i=info, f=lf: self.on_info_received(i, f)
+                ),
+                error_callback=lambda err, lf=video_loading_frame: self.app.after(
+                    0, lambda e=err, f=lf: self.on_info_error(e, f)
+                )
+            )
+            thread.daemon = True
+            thread.start()
+
+        # Réactiver le bouton
+        self.check_url_btn.configure(state="normal")
+
+        # Mettre à jour le statut final
+        if len(entries) > 1:
+            self.app.after(1000, lambda: self.single_status_label.configure(
+                text=f"✅ {len(entries)} vidéos ajoutées à la file d'attente"
+            ))
+
+    def _on_extraction_error(self, error, loading_frame):
+        """Appelé en cas d'erreur lors de l'extraction."""
+        loading_frame.stop()
+        self.check_url_btn.configure(state="normal")
+        messagebox.showerror(
+            get_text("error", self.app.current_language),
+            f"Erreur lors de l'extraction : {error}"
         )
-        thread.daemon = True
-        thread.start()
 
     def load_urls_from_file(self):
         """Charge un fichier contenant des liens et ajoute chaque vidéo automatiquement."""
@@ -861,7 +935,7 @@ class SingleDownloadTab:
         video_frame.pack(fill="x", pady=5)
         self.video_frames.append(video_frame)
 
-        self.url_input.delete(0, "end")
+        self.url_input.delete(0, "end")   # ✅ On efface le champ d'URL
         self.check_url_btn.configure(state="normal")
 
         self.refresh_download_button()
@@ -886,7 +960,10 @@ class SingleDownloadTab:
     def on_info_error(self, error, loading_frame):
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
-        messagebox.showerror(get_text("error", self.app.current_language), f"{get_text('error_prefix', self.app.current_language)} {error}")
+        messagebox.showerror(
+            get_text("error", self.app.current_language),
+            f"{get_text('error_prefix', self.app.current_language)} {error}"
+        )
 
     # ---------------- téléchargement (toggle bouton unique) ----------------
 
@@ -923,7 +1000,7 @@ class SingleDownloadTab:
             return
         self.app.output_path = output_path
 
-        # 🔑 nombre de téléchargements attendus
+        # nombre de téléchargements attendus
         self._expected_threads = len(self.video_frames)
 
         self.active_threads.clear()
@@ -943,7 +1020,9 @@ class SingleDownloadTab:
         self.check_url_btn.configure(state="disabled")
 
         # lancer un DownloadThread par vidéo
-        for vf in self.video_frames:
+        total_videos = len(self.video_frames)
+
+        for index, vf in enumerate(self.video_frames, start=1):
             opts = vf.get_options()
             tref = {}
 
@@ -954,10 +1033,20 @@ class SingleDownloadTab:
 
                 return _progress
 
-            def make_status_cb():
-                return lambda txt: self.app.after(
-                    0, lambda: self.single_status_label.configure(text=txt)
-                )
+            def make_status_cb(video_index, total_videos, video_title):
+                def _status(text):
+                    self.app.after(
+                        0,
+                        lambda: self.single_status_label.configure(
+                            text=(
+                                f"Vidéo {video_index} / {total_videos}\n"
+                                f"{video_title}\n"
+                                f"{text}"
+                            )
+                        )
+                    )
+
+                return _status
 
             def make_finished_cb(tref):
                 return lambda success: self.app.after(
@@ -973,7 +1062,11 @@ class SingleDownloadTab:
                 opts["audio_format"],
                 output_path,
                 progress_callback=make_progress_cb(tref),
-                status_callback=make_status_cb(),
+                status_callback=make_status_cb(
+                    index,
+                    total_videos,
+                    opts["title"]
+                ),
                 finished_callback=make_finished_cb(tref)
             )
 
