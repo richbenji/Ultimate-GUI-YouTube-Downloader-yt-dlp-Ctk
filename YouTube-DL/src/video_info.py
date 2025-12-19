@@ -1,5 +1,6 @@
 import yt_dlp
 from tabulate import tabulate  # pip install tabulate
+from .errors import InvalidURLError, VideoInfoFetchError
 
 
 class VideoInfo:
@@ -21,6 +22,10 @@ class VideoInfo:
 
     def fetch_info(self):
         """Récupère toutes les infos de la vidéo via yt_dlp"""
+
+        if not self.url or not isinstance(self.url, str):
+            raise InvalidURLError()
+
         try:
             ydl_opts = {"quiet": True, "no_warnings": True, "skip_download": True}
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -51,8 +56,7 @@ class VideoInfo:
                 self.is_valid = True
                 return True
         except Exception as e:
-            print(f"Erreur lors de l'extraction des informations: {e}")
-            return False
+            raise VideoInfoFetchError() from e
 
     def get_detailed_summary(self):
         """Retourne un résumé détaillé avec un tableau des formats."""

@@ -5,6 +5,7 @@ from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
 from .playlist_utils import extract_playlist_entries
 from .utils import ask_output_folder
+from .errors import InvalidURLError, VideoInfoFetchError
 
 
 import threading
@@ -807,9 +808,13 @@ class SingleDownloadTab:
                 entries = extract_playlist_entries(url)
                 # Retour sur le thread principal
                 self.app.after(0, lambda: self._on_playlist_extracted(entries, loading_frame))
-            except Exception as error:
-                # Capturer l'erreur dans une variable locale
+            except ValueError as error:
+                # Erreur de validation
                 error_msg = str(error)
+                self.app.after(0, lambda: self._on_extraction_error(error_msg, loading_frame))
+            except Exception as error:
+                # Autre erreur
+                error_msg = "Impossible d'obtenir les informations de la vidéo"
                 self.app.after(0, lambda: self._on_extraction_error(error_msg, loading_frame))
 
         threading.Thread(target=extract_and_add, daemon=True).start()

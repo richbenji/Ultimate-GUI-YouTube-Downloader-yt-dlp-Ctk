@@ -1,4 +1,5 @@
 import yt_dlp
+from .errors import InvalidURLError, VideoInfoFetchError
 
 
 def extract_playlist_entries(url):
@@ -11,32 +12,51 @@ def extract_playlist_entries(url):
         ...
     ]
 
-    Si l'URL est une vidéo unique, retourne une liste avec un seul élément.
-    Si c'est une playlist, retourne toutes les vidéos de la playlist.
+    Raises:
+        InvalidURLError: Si l'URL est vide ou invalide
+        VideoInfoFetchError: Si l'extraction échoue
     """
+    # Validation basique
+    if not url or not isinstance(url, str) or not url.strip():
+        raise InvalidURLError()
+
     ydl_opts = {
         "quiet": True,
-        "extract_flat": True,  # Ne télécharge pas, juste les métadonnées
+        "extract_flat": True,
         "skip_download": True,
         "no_warnings": True,
-        "ignoreerrors": True,  # Continue même si certaines vidéos échouent
+        "ignoreerrors": False,
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
+        if not info:
+            raise VideoInfoFetchError()
+
         # Cas 1 : Vidéo unique
         if info.get("_type") != "playlist":
+            video_url = info.get("webpage_url") or info.get("url") or url
+            video_title = info.get("title")
+
+            if not video_title:
+                raise VideoInfoFetchError()
+
             return [{
-                "url": info.get("webpage_url") or info.get("url") or url,
-                "title": info.get("title", "Titre inconnu"),
+                "url": video_url,
+                "title": video_title,
                 "index": 1
             }]
 
         # Cas 2 : Playlist
         entries = []
-        for idx, entry in enumerate(info.get("entries", []), start=1):
+        raw_entries = info.get("entries", [])
+
+        if not raw_entries:
+            raise VideoInfoFetchError()
+
+        for idx, entry in enumerate(raw_entries, start=1):
             if not entry:
                 continue
 
@@ -49,16 +69,27 @@ def extract_playlist_entries(url):
                 else:
                     continue
 
+            video_title = entry.get("title")
+            if not video_title:
+                video_title = f"Vidéo {idx}"
+
             entries.append({
                 "url": video_url,
-                "title": entry.get("title", f"Vidéo {idx}"),
+                "title": video_title,
                 "index": idx
             })
 
+        if not entries:
+            raise VideoInfoFetchError()
+
         return entries
 
-    except Exception as e:
-        raise Exception(f"Impossible d'extraire les informations : {str(e)}")
+    except (InvalidURLError, VideoInfoFetchError):
+        # Re-lever nos propres exceptions
+        raise
+    except Exception:
+        # Toute autre erreur = problème d'extraction
+        raise VideoInfoFetchError()
 
 
 def is_playlist_url(url):
@@ -68,6 +99,9 @@ def is_playlist_url(url):
     Returns:
         bool: True si c'est une playlist, False sinon
     """
+    if not url:
+        return False
+
     playlist_indicators = [
         "playlist?list=",
         "&list=",

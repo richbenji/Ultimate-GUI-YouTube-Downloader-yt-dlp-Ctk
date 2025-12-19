@@ -4,6 +4,7 @@ import threading
 import yt_dlp
 from .video_info import VideoInfo
 from .translations import get_text
+from .errors import InvalidURLError, VideoInfoFetchError
 
 
 # ------------ Exception spéciale pour une annulation propre ------------
@@ -25,16 +26,23 @@ class InfoThread(threading.Thread):
     def run(self):
         try:
             info = VideoInfo(self.url)
-            if info.fetch_info():
-                if self.callback:
-                    self.callback(info)
-            else:
-                if self.error_callback:
-                    self.error_callback(get_text("fetching_impossible", self.app.current_language))
+            info.fetch_info()
+            self.callback(info)
 
-        except Exception as e:
-            if self.error_callback:
-                self.error_callback(str(e))
+        except InvalidURLError:
+            self.error_callback(
+                get_text("enter_valid_url", self.app.current_language)
+            )
+
+        except VideoInfoFetchError:
+            self.error_callback(
+                get_text("fetching_impossible", self.app.current_language)
+            )
+
+        except Exception:
+            self.error_callback(
+                get_text("fetching_impossible", self.app.current_language)
+            )
 
 
 # ======================== DOWNLOAD THREAD =============================
