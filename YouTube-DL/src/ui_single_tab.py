@@ -6,6 +6,7 @@ from .download_threads import InfoThread, DownloadThread
 from .playlist_utils import extract_playlist_entries
 from .utils import ask_output_folder
 from .errors import InvalidURLError, VideoInfoFetchError
+from .url_resolver import resolve_url, UrlResolveError
 
 
 import threading
@@ -786,38 +787,29 @@ class SingleDownloadTab:
     # ---------------- URL check / ajout ----------------
 
     def check_url(self):
-        """Vérifie une URL saisie. Si c'est une playlist, extrait toutes les vidéos."""
         url = self.url_input.get().strip()
-        if not url:
-            messagebox.showwarning(
-                get_text("warning", self.app.current_language),
-                get_text("enter_valid_url", self.app.current_language)
-            )
-            return
-
         self.check_url_btn.configure(state="disabled")
 
-        # Frame de chargement pendant l'extraction
         loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
-        loading_frame.loading_text.configure(text="Analyse de l'URL...")
         loading_frame.pack(fill="x", pady=5)
 
-        # Extraction en arrière-plan
-        def extract_and_add():
+        def worker():
             try:
-                entries = extract_playlist_entries(url)
-                # Retour sur le thread principal
-                self.app.after(0, lambda: self._on_playlist_extracted(entries, loading_frame))
-            except ValueError as error:
-                # Erreur de validation
-                error_msg = str(error)
-                self.app.after(0, lambda: self._on_extraction_error(error_msg, loading_frame))
-            except Exception as error:
-                # Autre erreur
-                error_msg = "Impossible d'obtenir les informations de la vidéo"
-                self.app.after(0, lambda: self._on_extraction_error(error_msg, loading_frame))
+                entries = resolve_url(url)
+                self.app.after(
+                    0,
+                    lambda entries=entries: self._on_playlist_extracted(entries, loading_frame)
+                )
 
-        threading.Thread(target=extract_and_add, daemon=True).start()
+            except UrlResolveError as err:
+                message_key = err.message_key  # 🔑 capture IMMÉDIATE
+
+                self.app.after(
+                    0,
+                    lambda mk=message_key: self._on_extraction_error(mk, loading_frame)
+                )
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def _on_playlist_extracted(self, entries, loading_frame):
         """Appelé quand l'extraction de playlist est terminée."""
@@ -873,13 +865,13 @@ class SingleDownloadTab:
                 text=f"✅ {len(entries)} vidéos ajoutées à la file d'attente"
             ))
 
-    def _on_extraction_error(self, error, loading_frame):
-        """Appelé en cas d'erreur lors de l'extraction."""
+    def _on_extraction_error(self, message_key, loading_frame):
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
+
         messagebox.showerror(
             get_text("error", self.app.current_language),
-            f"Erreur lors de l'extraction : {error}"
+            get_text(message_key, self.app.current_language)
         )
 
     def load_urls_from_file(self):
