@@ -718,14 +718,26 @@ class SingleDownloadTab:
         buttons_frame.pack(fill="x", pady=5)
         buttons_frame.grid_columnconfigure(0, weight=1)
         buttons_frame.grid_columnconfigure(1, weight=0)
-        buttons_frame.grid_columnconfigure(2, weight=1)
+        buttons_frame.grid_columnconfigure(2, weight=0)
+        buttons_frame.grid_columnconfigure(3, weight=1)
 
+        # 🗑️ Bouton Vider la file
+        self.clear_queue_btn = ctk.CTkButton(
+            buttons_frame,
+            text="🗑️ " + get_text("clear_queue", self.app.current_language),
+            command=self.clear_queue,
+            state="disabled",
+            width=200
+        )
+        self.clear_queue_btn.grid(row=0, column=2, padx=10, pady=10)
+
+        # ⬇️ Bouton Télécharger
         self.download_btn = ctk.CTkButton(
             buttons_frame,
             text="⬇️ " + get_text("download_button", self.app.current_language),
             command=self.start_download_all,
             state="disabled",
-            width=400
+            width=300
         )
         self.download_btn.grid(row=0, column=1, pady=10)
 
@@ -937,6 +949,8 @@ class SingleDownloadTab:
 
         self.refresh_download_button()
 
+        self.clear_queue_btn.configure(state="normal")
+
         # si au moins un fichier -> activer le bouton (si pas en téléchargement)
         if not self.is_downloading:
             self.download_btn.configure(state="normal")
@@ -954,6 +968,8 @@ class SingleDownloadTab:
 
         self.refresh_download_button()
 
+        self.clear_queue_btn.configure(state="disabled")
+
     def on_info_error(self, error, loading_frame):
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
@@ -961,6 +977,30 @@ class SingleDownloadTab:
             get_text("error", self.app.current_language),
             f"{get_text('error_prefix', self.app.current_language)} {error}"
         )
+
+    # ---------------- vider la queue ----------------
+
+    def clear_queue(self):
+        """Vide complètement la file des vidéos."""
+        if self.is_downloading:
+            return  # sécurité
+
+        for vf in self.video_frames:
+            vf.destroy()
+
+        self.video_frames.clear()
+        self.active_threads.clear()
+        self._thread_progress.clear()
+
+        self.single_progress_bar.set(0)
+        self.single_status_label.configure(
+            text=get_text("ready_status", self.app.current_language)
+        )
+
+        self.show_placeholder()
+
+        self.download_btn.configure(state="disabled")
+        self.clear_queue_btn.configure(state="disabled")
 
     # ---------------- téléchargement (toggle bouton unique) ----------------
 
@@ -1015,6 +1055,8 @@ class SingleDownloadTab:
             state="normal"
         )
         self.check_url_btn.configure(state="disabled")
+
+        self.clear_queue_btn.configure(state="disabled")
 
         # lancer un DownloadThread par vidéo
         total_videos = len(self.video_frames)
@@ -1104,6 +1146,7 @@ class SingleDownloadTab:
     def _on_thread_finished(self, thread, success):
         self._download_results.append(success)
         self._thread_progress[thread] = 100
+        self.clear_queue_btn.configure(state="normal" if self.video_frames else "disabled")
 
         # Tous les téléchargements sont terminés
         if len(self._download_results) == self._expected_threads:
