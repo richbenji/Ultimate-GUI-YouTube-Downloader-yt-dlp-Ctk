@@ -781,7 +781,7 @@ class SingleDownloadTab:
         self.refresh_download_button()
 
         # Bouton "Vider la queue"
-        self.clear_queue_btn.configure(text=get_text("clear_queue", self.app.current_language))
+        self.clear_queue_btn.configure(text="🗑️ " + get_text("clear_queue", self.app.current_language))
 
 
     def show_placeholder(self):
@@ -839,47 +839,52 @@ class SingleDownloadTab:
             self.check_url_btn.configure(state="normal")
             return
 
-        # Afficher un message si c'est une playlist
+        self.hide_placeholder()
+
+        # Message playlist
         if len(entries) > 1:
             self.single_status_label.configure(
-                text=f"📋 Playlist détectée : {len(entries)} vidéos trouvées. Chargement en cours..."
+                text=f"📋 Playlist détectée : {len(entries)} vidéos trouvées. Chargement..."
             )
 
-        # Ajouter chaque vidéo individuellement
         for entry in entries:
-            video_url = entry.get("url")
-            if not video_url:
-                continue
+            video_url = entry["url"]
+            title = entry.get("title", "Chargement...")
 
-            # Créer une frame de chargement pour cette vidéo
             video_loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
-            video_loading_frame.loading_text.configure(
-                text=f"⏳ {entry.get('title', 'Chargement...')}"
-            )
+            video_loading_frame.loading_text.configure(text=f"⏳ {title}")
             video_loading_frame.pack(fill="x", pady=5)
 
-            # Lancer la récupération des infos
+            # 🔒 callbacks figés
+            def make_success_cb(lf):
+                return lambda info: self.app.after(
+                    0, lambda i=info, f=lf: self.on_info_received(i, f)
+                )
+
+            def make_error_cb(lf):
+                return lambda err: self.app.after(
+                    0, lambda e=err, f=lf: self.on_info_error(e, f)
+                )
+
             thread = InfoThread(
                 video_url,
                 self.app,
-                callback=lambda info, lf=video_loading_frame: self.app.after(
-                    0, lambda i=info, f=lf: self.on_info_received(i, f)
-                ),
-                error_callback=lambda err, lf=video_loading_frame: self.app.after(
-                    0, lambda e=err, f=lf: self.on_info_error(e, f)
-                )
+                callback=make_success_cb(video_loading_frame),
+                error_callback=make_error_cb(video_loading_frame)
             )
+
             thread.daemon = True
             thread.start()
 
-        # Réactiver le bouton
         self.check_url_btn.configure(state="normal")
 
-        # Mettre à jour le statut final
         if len(entries) > 1:
-            self.app.after(1000, lambda: self.single_status_label.configure(
-                text=f"✅ {len(entries)} vidéos ajoutées à la file d'attente"
-            ))
+            self.app.after(
+                1000,
+                lambda: self.single_status_label.configure(
+                    text=f"✅ {len(entries)} vidéos ajoutées à la file d'attente"
+                )
+            )
 
     def _on_extraction_error(self, message_key, loading_frame):
         loading_frame.stop()
@@ -958,6 +963,9 @@ class SingleDownloadTab:
         # si au moins un fichier -> activer le bouton (si pas en téléchargement)
         if not self.is_downloading:
             self.download_btn.configure(state="normal")
+
+        # Vérification dans le terminal : on doit voir apparaître les titres de toutes les vidéos de la playlist
+        # print("INFO RECEIVED:", info.title)
 
     def remove_video(self, video_frame):
         if video_frame in self.video_frames:
