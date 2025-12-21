@@ -780,6 +780,10 @@ class SingleDownloadTab:
         # Bouton télécharger
         self.refresh_download_button()
 
+        # Bouton "Vider la queue"
+        self.clear_queue_btn.configure(text=get_text("clear_queue", self.app.current_language))
+
+
     def show_placeholder(self):
         """Affiche le texte 'Aucun fichier' si la file est vide."""
         if not self.video_frames and self.placeholder_label is None:
