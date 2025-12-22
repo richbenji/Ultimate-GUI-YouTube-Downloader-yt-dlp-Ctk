@@ -1007,10 +1007,13 @@ class SingleDownloadTab:
             # si plus de vidéos, désactiver bouton téléchargement si idle
             if not self.is_downloading:
                 self.download_btn.configure(state="disabled")
+            # Désactiver le bouton "Vider la queue" uniquement si vide
+            self.clear_queue_btn.configure(state="disabled")
+        else:
+            # ✅ Il reste des vidéos, garder le bouton actif
+            self.clear_queue_btn.configure(state="normal")
 
         self.refresh_download_button()
-
-        self.clear_queue_btn.configure(state="disabled")
 
     def on_info_error(self, error, loading_frame):
         """Appelé quand la récupération des infos d'une vidéo échoue."""
