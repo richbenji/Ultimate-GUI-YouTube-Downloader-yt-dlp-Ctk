@@ -37,6 +37,7 @@ TRANSLATIONS = {
         "error": "Erreur",
         "no_resolutions_found": "Pas de résolutions trouvées",
         "no_bitrates_found": "Pas de bitrates trouvées",
+        "loading" : "⏳ Chargement en cours...",
 
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",

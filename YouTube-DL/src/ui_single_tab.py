@@ -808,9 +808,12 @@ class SingleDownloadTab:
         url = self.url_input.get().strip()
         self.check_url_btn.configure(state="disabled")
 
+        # 🔴 Masquer immédiatement le placeholder
+        self.hide_placeholder()
+
         loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
         loading_frame.loading_text.configure(
-            text=f"⏳ Chargement en cours..."
+            text=get_text("loading", self.app.current_language)
         )
         loading_frame.pack(fill="x", pady=5)
 
@@ -844,9 +847,15 @@ class SingleDownloadTab:
                 "Aucune vidéo trouvée dans cette URL."
             )
             self.check_url_btn.configure(state="normal")
+            # Réafficher le placeholder
+            if not self.video_frames:
+                self.show_placeholder()
             return
 
-        self.hide_placeholder()
+            # 🔴 Supprimer IMMÉDIATEMENT le loader global "Chargement en cours..."
+        if self.playlist_loading_frame is not None:
+            self.playlist_loading_frame.stop()
+            self.playlist_loading_frame = None
 
         # Message playlist
         if len(entries) > 1:
@@ -896,8 +905,14 @@ class SingleDownloadTab:
             )
 
     def _on_extraction_error(self, message_key, loading_frame):
+        """Appelé quand l'extraction de playlist échoue."""
+
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
+
+        # 🔴 Réafficher le placeholder en cas d'erreur
+        if not self.video_frames:
+            self.show_placeholder()
 
         messagebox.showerror(
             get_text("error", self.app.current_language),
@@ -906,6 +921,7 @@ class SingleDownloadTab:
 
     def load_urls_from_file(self):
         """Charge un fichier contenant des liens et ajoute chaque vidéo automatiquement."""
+
         from tkinter import filedialog
 
         file_path = filedialog.askopenfilename(
@@ -959,29 +975,22 @@ class SingleDownloadTab:
         Appelé quand les infos d'une vidéo sont prêtes.
         """
 
-        # 1. Supprimer le loader GLOBAL au moment où la PREMIÈRE vidéo arrive
-        if self.playlist_loading_frame is not None:
-            self.playlist_loading_frame.stop()
-            self.playlist_loading_frame = None
-
-        # 2. Supprimer le loader de CETTE vidéo
+        # 1. Supprimer le loader de CETTE vidéo
         loading_frame.stop()
 
-        self.hide_placeholder()
-
-        # 3. Créer la vraie frame vidéo
+        # 2. Créer la vraie frame vidéo
         video_frame = VideoItemFrame(self.playlist_frame, self.app, info, self)
         video_frame.pack(fill="x", pady=5)
         self.video_frames.append(video_frame)
 
-        # 4. UI
+        # 3. UI
         self.url_input.delete(0, "end")
         self.check_url_btn.configure(state="normal")
 
         self.refresh_download_button()
         self.clear_queue_btn.configure(state="normal")
 
-        # 5. Activer le bouton de téléchargement si possible
+        # 4. Activer le bouton de téléchargement si possible
         if not self.is_downloading:
             self.download_btn.configure(state="normal")
 
@@ -1004,8 +1013,15 @@ class SingleDownloadTab:
         self.clear_queue_btn.configure(state="disabled")
 
     def on_info_error(self, error, loading_frame):
+        """Appelé quand la récupération des infos d'une vidéo échoue."""
+
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
+
+        # 🔴 Réafficher le placeholder si plus aucune vidéo
+        if not self.video_frames:
+            self.show_placeholder()
+
         messagebox.showerror(
             get_text("error", self.app.current_language),
             f"{get_text('error_prefix', self.app.current_language)} {error}"
@@ -1229,6 +1245,7 @@ class LoadingItemFrame(ctk.CTkFrame):
     def __init__(self, parent, app):
         super().__init__(parent, fg_color="transparent")
         self.app = app
+        self._is_running = True  # 🔑 Flag pour arrêter la mise à jour
 
         self.progress_bar = ctk.CTkProgressBar(self, mode="indeterminate", width=300)
         self.progress_bar.pack(pady=(10, 5))
@@ -1241,11 +1258,28 @@ class LoadingItemFrame(ctk.CTkFrame):
         )
         self.loading_text.pack()
 
+        # 🔑 Force la mise à jour périodique de l'UI
+        self._keep_alive()
+
+    def _keep_alive(self):
+        """Force la mise à jour de l'interface toutes les 100ms."""
+        if self._is_running:
+            try:
+                self.update_idletasks()  # Force le rafraîchissement
+                self.after(100, self._keep_alive)  # Rappel dans 100ms
+            except Exception:
+                # Widget détruit, on arrête
+                self._is_running = False
+
     def refresh_texts(self):
         """Met à jour la traduction du texte de chargement."""
         self.loading_text.configure(text=get_text("loading_video_info", self.app.current_language))
 
     def stop(self):
         """Arrête et détruit la frame."""
-        self.progress_bar.stop()
+        self._is_running = False  # 🔑 Arrête la boucle de mise à jour
+        try:
+            self.progress_bar.stop()
+        except Exception:
+            pass
         self.destroy()
