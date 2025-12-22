@@ -677,6 +677,8 @@ class SingleDownloadTab:
         self._download_results = []  # liste de True / False
         self._expected_threads = 0  # Total à télécharger
         self._finished_threads = 0  # terminés
+        self.playlist_loading_frame = None
+        self.first_video_loader_shown = False
         self.build_ui()
 
     def build_ui(self):
@@ -807,7 +809,13 @@ class SingleDownloadTab:
         self.check_url_btn.configure(state="disabled")
 
         loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
+        loading_frame.loading_text.configure(
+            text=f"⏳ Chargement en cours..."
+        )
         loading_frame.pack(fill="x", pady=5)
+
+        self.playlist_loading_frame = loading_frame
+        self.first_video_loader_shown = False
 
         def worker():
             try:
@@ -829,7 +837,6 @@ class SingleDownloadTab:
 
     def _on_playlist_extracted(self, entries, loading_frame):
         """Appelé quand l'extraction de playlist est terminée."""
-        loading_frame.stop()
 
         if not entries:
             messagebox.showwarning(
@@ -847,6 +854,7 @@ class SingleDownloadTab:
                 text=f"📋 Playlist détectée : {len(entries)} vidéos trouvées. Chargement..."
             )
 
+        # Création des loaders vidéo + lancement des threads
         for entry in entries:
             video_url = entry["url"]
             title = entry.get("title", "Chargement...")
@@ -876,6 +884,7 @@ class SingleDownloadTab:
             thread.daemon = True
             thread.start()
 
+        # UI
         self.check_url_btn.configure(state="normal")
 
         if len(entries) > 1:
@@ -946,21 +955,33 @@ class SingleDownloadTab:
         )
 
     def on_info_received(self, info, loading_frame):
+        """
+        Appelé quand les infos d'une vidéo sont prêtes.
+        """
+
+        # 1. Supprimer le loader GLOBAL au moment où la PREMIÈRE vidéo arrive
+        if self.playlist_loading_frame is not None:
+            self.playlist_loading_frame.stop()
+            self.playlist_loading_frame = None
+
+        # 2. Supprimer le loader de CETTE vidéo
         loading_frame.stop()
+
         self.hide_placeholder()
 
+        # 3. Créer la vraie frame vidéo
         video_frame = VideoItemFrame(self.playlist_frame, self.app, info, self)
         video_frame.pack(fill="x", pady=5)
         self.video_frames.append(video_frame)
 
-        self.url_input.delete(0, "end")   # ✅ On efface le champ d'URL
+        # 4. UI
+        self.url_input.delete(0, "end")
         self.check_url_btn.configure(state="normal")
 
         self.refresh_download_button()
-
         self.clear_queue_btn.configure(state="normal")
 
-        # si au moins un fichier -> activer le bouton (si pas en téléchargement)
+        # 5. Activer le bouton de téléchargement si possible
         if not self.is_downloading:
             self.download_btn.configure(state="normal")
 
