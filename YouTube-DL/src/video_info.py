@@ -1,6 +1,8 @@
 import yt_dlp
-from tabulate import tabulate  # pip install tabulate
+from tabulate import tabulate
 from .errors import InvalidURLError, VideoInfoFetchError
+from .utils import format_bytes_iec
+
 
 
 class VideoInfo:
@@ -129,7 +131,7 @@ class VideoInfo:
 
             filesize = f.get("filesize") or f.get("filesize_approx") or ""
             if isinstance(filesize, (int, float)):
-                filesize = f"{round(filesize / (1024 * 1024), 2)} MB"
+                filesize = format_bytes_iec(filesize)
 
             format_note = f.get("format") or ""
             protocole = f.get("protocol") or ""
@@ -232,7 +234,7 @@ class VideoInfo:
 
             filesize = f.get("filesize") or f.get("filesize_approx") or ""
             if isinstance(filesize, (int, float)):
-                filesize = f"{round(filesize / (1024*1024), 2)} MB"
+                filesize = format_bytes_iec(filesize)
 
             rows.append([
                 flux_type, resolution, bitrate, ext, filesize, fps,

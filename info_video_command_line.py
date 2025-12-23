@@ -1,5 +1,7 @@
 from yt_dlp import YoutubeDL
 from tabulate import tabulate  # pip install tabulate
+from pprint import pprint
+
 
 # URL de la vidéo YouTube
 video_url = input("Entrez l'URL de la vidéo YouTube : ").strip()
@@ -9,9 +11,11 @@ ydl_opts = {'quiet': True, 'skip_download': True}
 
 with YoutubeDL(ydl_opts) as ydl:
     info = ydl.extract_info(video_url, download=False)
-    #print(info)  # Affiche toutes les informations de la vidéo
+    #pprint(info)  # Affiche toutes les informations de la vidéo
 
     # Affichage lisible des informations
+    print(f"LA TAILLE C'EST      : {info.get('filesize_approx')}")
+
     print("=== Informations Générales ===")
     print(f"Titre       : {info.get('title')}")
     print(f"Auteur      : {info.get('uploader')}")

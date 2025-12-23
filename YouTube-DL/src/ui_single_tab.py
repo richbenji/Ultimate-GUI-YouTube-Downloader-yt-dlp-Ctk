@@ -3,9 +3,7 @@ import customtkinter as ctk
 from tkinter import messagebox, ttk
 from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
-from .playlist_utils import extract_playlist_entries
-from .utils import ask_output_folder
-from .errors import InvalidURLError, VideoInfoFetchError
+from .utils import ask_output_folder, format_bytes_iec
 from .url_resolver import resolve_url, UrlResolveError
 
 
@@ -312,7 +310,7 @@ class VideoItemFrame(ctk.CTkFrame):
         if not sizes:
             return "Inconnue"
         size_mb = max(sizes) / (1024 * 1024)
-        return f"{size_mb:.2f} MB"
+        return f"{size_mb:.2f} MiB"
 
     def _format_duration(self, seconds):
         if not seconds:
@@ -376,7 +374,7 @@ class VideoItemFrame(ctk.CTkFrame):
 
         duration = self._format_duration(getattr(self.info, "duration", 0))
         self.extra_info_label.configure(
-            text=f"⏱ {duration}   |   💾 {size_mb:.2f} MB"
+            text=f"⏱ {duration}   |   💾 {size_mb:.2f} MiB"
         )
 
         # prévenir l’onglet parent
@@ -1068,10 +1066,10 @@ class SingleDownloadTab:
             return
 
         total = self.compute_total_size()
-        mb = total / (1024 * 1024)
+        size_str = format_bytes_iec(total)
 
         self.download_btn.configure(
-            text=f"⬇️ {get_text('download_button', self.app.current_language)} – {mb:.2f} MB",
+            text=f"⬇️ {get_text('download_button', self.app.current_language)} – {size_str}",
             state="normal" if not self.is_downloading else "normal"
         )
 

@@ -35,3 +35,26 @@ def ask_output_folder(language, last_folder=None):
         initialdir=initialdir
     )
     return folder
+
+def format_bytes_iec(size_bytes, precision=2):
+    """
+    Convertit une taille en octets vers o / Kio / Mio / Gio / Tio (IEC).
+    """
+    if size_bytes is None:
+        return "N/A"
+
+    try:
+        size_bytes = float(size_bytes)
+    except (TypeError, ValueError):
+        return "N/A"
+
+    units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"]
+    factor = 1024.0
+
+    for unit in units:
+        if size_bytes < factor:
+            return f"{size_bytes:.{precision}f} {unit}"
+        size_bytes /= factor
+
+    return f"{size_bytes:.{precision}f} PiB"
+
