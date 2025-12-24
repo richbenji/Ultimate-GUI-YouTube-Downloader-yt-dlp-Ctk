@@ -830,11 +830,20 @@ class SingleDownloadTab:
             if not video_url:
                 continue
 
+            # 🔑 cacher le placeholder dès le premier ajout
+            self.hide_placeholder()
+
+            # Créer le loader
             video_loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
             video_loading_frame.loading_text.configure(
                 text=f"⏳ {entry.get('title', 'Chargement...')}"
             )
-            video_loading_frame.pack(fill="x", pady=5)
+
+            # 🔼 Pack en haut
+            if self.video_frames:
+                video_loading_frame.pack(fill="x", pady=5, before=self.video_frames[0])
+            else:
+                video_loading_frame.pack(fill="x", pady=5)
 
             thread = InfoThread(
                 video_url,
@@ -907,7 +916,11 @@ class SingleDownloadTab:
         self.hide_placeholder()
 
         loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
-        loading_frame.pack(fill="x", pady=5)
+
+        if self.video_frames:
+            loading_frame.pack(fill="x", pady=5, before=self.video_frames[0])
+        else:
+            loading_frame.pack(fill="x", pady=5)
 
         def worker():
             try:
@@ -935,11 +948,19 @@ class SingleDownloadTab:
 
         # 1. Supprimer le loader de CETTE vidéo
         loading_frame.stop()
+        self.hide_placeholder()
 
         # 2. Créer la vraie frame vidéo
         video_frame = VideoItemFrame(self.playlist_frame, self.app, info, self)
-        video_frame.pack(fill="x", pady=5)
-        self.video_frames.append(video_frame)
+
+        if self.video_frames:
+            # Insérer au-dessus de la première vidéo existante
+            video_frame.pack(fill="x", pady=5, before=self.video_frames[0])
+            self.video_frames.insert(0, video_frame)
+        else:
+            # Première vidéo
+            video_frame.pack(fill="x", pady=5)
+            self.video_frames.append(video_frame)
 
         # 3. UI
         self.url_input.delete(0, "end")
@@ -1025,11 +1046,21 @@ class SingleDownloadTab:
             )
             return
 
+        # Nombre de vidéos
+        count = len(self.video_frames)
+
+        # Taille totale en octets
         total = self.compute_total_size()
+        # Conversion en IEC (Mio / Gio)
         size_str = format_bytes_iec(total)
 
+        # Pluriel intelligent
+        videos_label = (
+            f"{count} vidéo" if count == 1 else f"{count} vidéos"
+        )
+
         self.download_btn.configure(
-            text=f"⬇️ {get_text('download_button', self.app.current_language)} – {size_str}",
+            text=f"⬇️ {get_text('download_button', self.app.current_language)} – {videos_label} = {size_str}",
             state="normal" if not self.is_downloading else "normal"
         )
 
