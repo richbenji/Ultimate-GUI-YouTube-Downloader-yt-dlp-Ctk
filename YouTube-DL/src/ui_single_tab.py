@@ -804,40 +804,13 @@ class SingleDownloadTab:
 
     def check_url(self):
         url = self.url_input.get().strip()
+
         self.check_url_btn.configure(state="disabled")
-
-        # 🔴 Masquer immédiatement le placeholder
-        self.hide_placeholder()
-
-        loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
-        loading_frame.loading_text.configure(
-            text=get_text("loading", self.app.current_language)
-        )
-        loading_frame.pack(fill="x", pady=5)
-
-        self.playlist_loading_frame = loading_frame
-        self.first_video_loader_shown = False
-
-        def worker():
-            try:
-                entries = resolve_url(url)
-                self.app.after(
-                    0,
-                    lambda entries=entries: self._on_playlist_extracted(entries, loading_frame)
-                )
-
-            except UrlResolveError as err:
-                message_key = err.message_key  # 🔑 capture IMMÉDIATE
-
-                self.app.after(
-                    0,
-                    lambda mk=message_key: self._on_extraction_error(mk, loading_frame)
-                )
-
-        threading.Thread(target=worker, daemon=True).start()
+        self._process_url(url)
 
     def _on_playlist_extracted(self, entries, loading_frame):
-        """Appelé quand l'extraction de playlist est terminée."""
+        loading_frame.stop()
+        self.hide_placeholder()
 
         if not entries:
             messagebox.showwarning(
@@ -845,81 +818,61 @@ class SingleDownloadTab:
                 "Aucune vidéo trouvée dans cette URL."
             )
             self.check_url_btn.configure(state="normal")
-            # Réafficher le placeholder
-            if not self.video_frames:
-                self.show_placeholder()
             return
 
-            # 🔴 Supprimer IMMÉDIATEMENT le loader global "Chargement en cours..."
-        if self.playlist_loading_frame is not None:
-            self.playlist_loading_frame.stop()
-            self.playlist_loading_frame = None
-
-        # Message playlist
         if len(entries) > 1:
             self.single_status_label.configure(
                 text=f"📋 Playlist détectée : {len(entries)} vidéos trouvées. Chargement..."
             )
 
-        # Création des loaders vidéo + lancement des threads
         for entry in entries:
-            video_url = entry["url"]
-            title = entry.get("title", "Chargement...")
+            video_url = entry.get("url")
+            if not video_url:
+                continue
 
             video_loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
-            video_loading_frame.loading_text.configure(text=f"⏳ {title}")
+            video_loading_frame.loading_text.configure(
+                text=f"⏳ {entry.get('title', 'Chargement...')}"
+            )
             video_loading_frame.pack(fill="x", pady=5)
-
-            # 🔒 callbacks figés
-            def make_success_cb(lf):
-                return lambda info: self.app.after(
-                    0, lambda i=info, f=lf: self.on_info_received(i, f)
-                )
-
-            def make_error_cb(lf):
-                return lambda err: self.app.after(
-                    0, lambda e=err, f=lf: self.on_info_error(e, f)
-                )
 
             thread = InfoThread(
                 video_url,
                 self.app,
-                callback=make_success_cb(video_loading_frame),
-                error_callback=make_error_cb(video_loading_frame)
+                callback=lambda info, lf=video_loading_frame: self.app.after(
+                    0, lambda i=info, f=lf: self.on_info_received(i, f)
+                ),
+                error_callback=lambda err, lf=video_loading_frame: self.app.after(
+                    0, lambda e=err, f=lf: self.on_info_error(e, f)
+                )
             )
-
             thread.daemon = True
             thread.start()
 
-        # UI
         self.check_url_btn.configure(state="normal")
 
         if len(entries) > 1:
             self.app.after(
-                1000,
+                800,
                 lambda: self.single_status_label.configure(
                     text=f"✅ {len(entries)} vidéos ajoutées à la file d'attente"
                 )
             )
 
     def _on_extraction_error(self, message_key, loading_frame):
-        """Appelé quand l'extraction de playlist échoue."""
-
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
-
-        # 🔴 Réafficher le placeholder en cas d'erreur
-        if not self.video_frames:
-            self.show_placeholder()
 
         messagebox.showerror(
             get_text("error", self.app.current_language),
             get_text(message_key, self.app.current_language)
         )
 
-    def load_urls_from_file(self):
-        """Charge un fichier contenant des liens et ajoute chaque vidéo automatiquement."""
+        # 🔑 Si aucune vidéo n'a été ajoutée, on remet le placeholder
+        if not self.video_frames:
+            self.show_placeholder()
 
+    def load_urls_from_file(self):
         from tkinter import filedialog
 
         file_path = filedialog.askopenfilename(
@@ -931,42 +884,49 @@ class SingleDownloadTab:
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                urls = [line.strip() for line in f.readlines() if line.strip()]
+                urls = [line.strip() for line in f if line.strip()]
         except Exception as e:
-            messagebox.showerror(get_text("error", self.app.current_language), f"Impossible de lire le fichier : {e}")
+            messagebox.showerror(
+                get_text("error", self.app.current_language),
+                f"Impossible de lire le fichier : {e}"
+            )
             return
 
         if not urls:
-            messagebox.showwarning(get_text("warning", self.app.current_language), get_text("no_valid_urls", self.app.current_language))
+            messagebox.showwarning(
+                get_text("warning", self.app.current_language),
+                get_text("no_valid_urls", self.app.current_language)
+            )
             return
 
-        # désactive bouton pendant le chargement multiple
-        #self.check_url_btn.configure(state="disabled")
-        #if hasattr(self, "load_file_btn"):
-        #    self.load_file_btn.configure(state="disabled")
-
-        # Lance la récupération d'infos pour chaque URL
         for url in urls:
-            loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
-            loading_frame.pack(fill="x", pady=5)
+            self._process_url(url)
 
-            thread = InfoThread(
-                url,
-                self.app,
-                callback=lambda info, lf=loading_frame: self.app.after(
-                    0, lambda: self.on_info_received(info, lf)
-                ),
-                error_callback=lambda err, lf=loading_frame: self.app.after(
-                    0, lambda: self.on_info_error(err, lf)
+    def _process_url(self, url: str):
+        # 🔑 Dès qu'on lance un traitement, on enlève le placeholder
+        self.hide_placeholder()
+
+        loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
+        loading_frame.pack(fill="x", pady=5)
+
+        def worker():
+            try:
+                entries = resolve_url(url)
+
+                self.app.after(
+                    0,
+                    lambda e=entries: self._on_playlist_extracted(e, loading_frame)
                 )
-            )
-            thread.daemon = True
-            thread.start()
 
-        # Après lancement
-        self.single_status_label.configure(
-            text=get_text("loaded_urls", self.app.current_language, count=len(urls))
-        )
+            except UrlResolveError as err:
+                message_key = err.message_key  # capture immédiate
+
+                self.app.after(
+                    0,
+                    lambda mk=message_key: self._on_extraction_error(mk, loading_frame)
+                )
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def on_info_received(self, info, loading_frame):
         """
@@ -1019,7 +979,7 @@ class SingleDownloadTab:
         loading_frame.stop()
         self.check_url_btn.configure(state="normal")
 
-        # 🔴 Réafficher le placeholder si plus aucune vidéo
+        # Réafficher le placeholder si plus aucune vidéo
         if not self.video_frames:
             self.show_placeholder()
 

@@ -34,7 +34,7 @@ def resolve_url(url: str):
         - fetching_impossible : échec récupération infos
     """
 
-    # 🔴 Validation unique de l'URL
+    # Validation unique de l'URL
     if not url or not isinstance(url, str) or not url.strip():
         raise UrlResolveError("enter_valid_url")
 
