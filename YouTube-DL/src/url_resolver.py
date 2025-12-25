@@ -8,7 +8,7 @@ Couche métier : résolution d'URL YouTube (vidéo ou playlist)
 """
 
 from .playlist_utils import extract_playlist_entries
-from .errors import InvalidURLError
+from .errors import InvalidURLError, VideoInfoFetchError
 
 
 class UrlResolveError(Exception):
@@ -44,6 +44,9 @@ def resolve_url(url: str):
     except InvalidURLError:
         # URL mal formée / non reconnue
         raise UrlResolveError("enter_valid_url")
+
+    except VideoInfoFetchError as e:
+        raise UrlResolveError(e.message_key)
 
     except Exception:
         # Erreur réseau, yt-dlp, parsing, etc.

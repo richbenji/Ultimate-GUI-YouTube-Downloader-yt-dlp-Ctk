@@ -1,22 +1,9 @@
 import yt_dlp
 from .errors import InvalidURLError, VideoInfoFetchError
+from .settings import ENABLE_PRIVATE_PLAYLISTS, COOKIES_FILE
 
 
 def extract_playlist_entries(url):
-    """
-    Extrait les vidéos d'une URL (playlist ou vidéo unique).
-
-    Retourne une liste de dicts:
-    [
-        {"url": "...", "title": "...", "index": ...},
-        ...
-    ]
-
-    Raises:
-        InvalidURLError: Si l'URL est vide ou invalide
-        VideoInfoFetchError: Si l'extraction échoue
-    """
-    # Validation basique
     if not url or not isinstance(url, str) or not url.strip():
         raise InvalidURLError()
 
@@ -25,71 +12,67 @@ def extract_playlist_entries(url):
         "extract_flat": True,
         "skip_download": True,
         "no_warnings": True,
-        "ignoreerrors": False,
+        "ignoreerrors": True,  # ⚠️ important pour playlists privées partielles
+        "cookiesfrombrowser": ("firefox",),
     }
+
+    # 🔐 Support playlists privées
+    if ENABLE_PRIVATE_PLAYLISTS and COOKIES_FILE.exists():
+        ydl_opts["cookiefile"] = str(COOKIES_FILE)
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
         if not info:
-            raise VideoInfoFetchError()
+            raise VideoInfoFetchError("fetching_impossible")
 
-        # Cas 1 : Vidéo unique
+        # 🎥 Vidéo unique
         if info.get("_type") != "playlist":
-            video_url = info.get("webpage_url") or info.get("url") or url
-            video_title = info.get("title")
+            title = info.get("title")
+            video_url = info.get("webpage_url")
 
-            if not video_title:
-                raise VideoInfoFetchError()
+            if not title or not video_url:
+                raise VideoInfoFetchError("fetching_impossible")
 
             return [{
                 "url": video_url,
-                "title": video_title,
+                "title": title,
                 "index": 1
             }]
 
-        # Cas 2 : Playlist
+        # 📋 Playlist
+        raw_entries = info.get("entries")
+
+        if raw_entries is None:
+            raise VideoInfoFetchError("playlist_private")
+
         entries = []
-        raw_entries = info.get("entries", [])
-
-        if not raw_entries:
-            raise VideoInfoFetchError()
-
         for idx, entry in enumerate(raw_entries, start=1):
             if not entry:
+                continue  # vidéo privée / supprimée
+
+            video_id = entry.get("id")
+            title = entry.get("title") or f"Vidéo {idx}"
+
+            if not video_id:
                 continue
 
-            # Construire l'URL complète de la vidéo
-            video_url = entry.get("url")
-            if not video_url:
-                video_id = entry.get("id")
-                if video_id:
-                    video_url = f"https://www.youtube.com/watch?v={video_id}"
-                else:
-                    continue
-
-            video_title = entry.get("title")
-            if not video_title:
-                video_title = f"Vidéo {idx}"
-
             entries.append({
-                "url": video_url,
-                "title": video_title,
+                "url": f"https://www.youtube.com/watch?v={video_id}",
+                "title": title,
                 "index": idx
             })
 
         if not entries:
-            raise VideoInfoFetchError()
+            raise VideoInfoFetchError("playlist_private")
 
         return entries
 
-    except (InvalidURLError, VideoInfoFetchError):
-        # Re-lever nos propres exceptions
+    except VideoInfoFetchError:
         raise
     except Exception:
-        # Toute autre erreur = problème d'extraction
-        raise VideoInfoFetchError()
+        raise VideoInfoFetchError("fetching_impossible")
 
 
 def is_playlist_url(url):
