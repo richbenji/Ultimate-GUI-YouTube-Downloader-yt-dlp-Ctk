@@ -9,7 +9,8 @@ from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
 from .utils import ask_output_folder, format_bytes_iec, ask_cookies_file
 from .url_resolver import resolve_url, UrlResolveError
-from .config_manager import set_cookies_path
+from .cookies_manager import update_cookies_path
+
 
 
 # optional imports for thumbnail; handled gracefully if absent
@@ -57,7 +58,7 @@ class VideoItemFrame(ctk.CTkFrame):
             )
 
         # ---------------- UI ----------------
-        self.audio_format = tk.StringVar(value="m4a")
+        self.audio_format = tk.StringVar(value="mp3")
 
         # layout principal : 2 colonnes (0 = miniature, 1 = contenu)
         self.grid_columnconfigure(0, weight=0)
@@ -942,8 +943,8 @@ class SingleDownloadTab:
 
                         path = ask_cookies_file(self.app.current_language)
                         if path:
-                            self.app.cookies_path = path
-                            set_cookies_path(path)
+                            self.app.cookies_path = update_cookies_path(path)
+
                             self._process_url(url)
                             loading_frame.stop()
                             return

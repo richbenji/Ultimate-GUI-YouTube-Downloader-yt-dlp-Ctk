@@ -93,6 +93,14 @@ class YouTubeDownloader(ctk.CTk):
         language_label = ctk.CTkLabel(lang_frame, text="🌐", font=ctk.CTkFont(size=16))
         language_label.pack(side="right", padx=(10,0))
 
+        self.cookies_btn = ctk.CTkButton(
+            left_container,
+            text="🍪 Select cookies.txt",
+            width=120,
+            command=self.change_cookies
+        )
+        self.cookies_btn.grid(row=2, column=0, sticky="w", pady=(5, 0))
+
         # === Colonne centrale : titre + sous-titre ===
         title_container = ctk.CTkFrame(header_frame, fg_color="transparent")
         title_container.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
