@@ -6,6 +6,9 @@ from .ui_single_tab import SingleDownloadTab
 from .ui_batch_tab import BatchDownloadTab
 from .ui_multiple_tab import MultipleDownloadTab
 from .settings import COOKIES_FILE
+from .config_manager import get_cookies_path
+from pathlib import Path
+
 
 
 
@@ -13,7 +16,9 @@ class YouTubeDownloader(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.cookies_path = str(COOKIES_FILE) if COOKIES_FILE.exists() else None
+        #self.cookies_path = str(COOKIES_FILE) if COOKIES_FILE.exists() else None
+        cookies = get_cookies_path()
+        self.cookies_path = cookies if cookies and Path(cookies).exists() else None
 
         # Langue par défaut
         self.current_language = "fr"

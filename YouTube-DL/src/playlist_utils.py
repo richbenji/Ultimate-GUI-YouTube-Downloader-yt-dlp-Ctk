@@ -24,94 +24,85 @@ def extract_playlist_entries(url, cookies_path=None):
     if not url or not isinstance(url, str) or not url.strip():
         raise InvalidURLError()
 
-    ydl_opts = {
+    # 🔹 BASE OPTIONS
+    base_opts = {
         "quiet": True,
-        #"extract_flat": True,
         "skip_download": True,
         "no_warnings": True,
-        "ignoreerrors": False,  # ⚠️ important pour playlists privées partielles
-        #"cookiesfrombrowser": ("firefox",),
+        "ignoreerrors": False,
     }
 
-    # 🔐 Cookies fournis dynamiquement par l'UI
-    if cookies_path:
-        ydl_opts["cookiefile"] = cookies_path
-    # 🔐 Cookies globaux (option B)
-    elif ENABLE_PRIVATE_PLAYLISTS and COOKIES_FILE.exists():
-        ydl_opts["cookiefile"] = str(COOKIES_FILE)
+    # 🔹 STRATÉGIES D’AUTHENTIFICATION (dans l’ordre)
+    strategies = [
+        # 1️⃣ Automatique : navigateur
+        {
+            **base_opts,
+            "extract_flat": True,
+            "cookiesfrombrowser": ("firefox",),
+        },
 
-    # 🔐 Playlist privée → extraction complète
-    if ydl_opts.get("cookiefile"):
-        ydl_opts["extract_flat"] = False
-    else:
-        ydl_opts["extract_flat"] = True
+        # 2️⃣ Manuel : cookies.txt
+        {
+            **base_opts,
+            "extract_flat": False,
+            "cookiefile": cookies_path,
+        } if cookies_path else None,
+    ]
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
+    for ydl_opts in filter(None, strategies):
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
 
-        if not info:
-            raise VideoInfoFetchError("fetching_impossible")
-
-        # 🎥 CAS 1 : Vidéo unique
-        if info.get("_type") != "playlist":
-            title = info.get("title")
-            video_url = info.get("webpage_url")
-
-            if not title or not video_url:
-                raise VideoInfoFetchError("fetching_impossible")
-
-            return [{
-                "url": video_url,
-                "title": title,
-                "index": 1
-            }]
-
-        # 📋 CAS 2 : Playlist
-        raw_entries = info.get("entries")
-
-        # Playlist privée ou inaccessible
-        if raw_entries is None:
-            raise VideoInfoFetchError("playlist_private")
-
-        entries = []
-        for idx, entry in enumerate(raw_entries, start=1):
-            if not entry:
-                continue  # vidéo privée / supprimée
-
-            video_id = entry.get("id")
-            title = entry.get("title") or f"Vidéo {idx}"
-
-            if not video_id:
+            if not info:
                 continue
 
-            entries.append({
-                "url": f"https://www.youtube.com/watch?v={video_id}",
-                "title": title,
-                "index": idx
-            })
+            # 🎥 Vidéo unique
+            if info.get("_type") != "playlist":
+                title = info.get("title")
+                video_url = info.get("webpage_url")
 
-        if not entries:
-            raise VideoInfoFetchError("playlist_private")
+                if not title or not video_url:
+                    continue
 
-        return entries
+                return [{
+                    "url": video_url,
+                    "title": title,
+                    "index": 1
+                }]
 
-    # 🔑 ERREUR yt-dlp (clé de la robustesse)
-    except DownloadError as e:
-        msg = str(e)
+            # 📋 Playlist
+            raw_entries = info.get("entries")
 
-        # YouTube MENT : ce message apparaît aussi pour playlists privées
-        if "The playlist does not exist" in msg:
-            raise VideoInfoFetchError("playlist_private")
+            if not raw_entries:
+                continue
 
-        raise VideoInfoFetchError("fetching_impossible")
+            entries = []
+            for idx, entry in enumerate(raw_entries, start=1):
+                if not entry:
+                    continue
 
-    except VideoInfoFetchError:
-        raise
+                video_id = entry.get("id")
+                title = entry.get("title") or f"Vidéo {idx}"
 
-    except Exception:
-        raise VideoInfoFetchError("fetching_impossible")
+                if not video_id:
+                    continue
 
+                entries.append({
+                    "url": f"https://www.youtube.com/watch?v={video_id}",
+                    "title": title,
+                    "index": idx
+                })
+
+            if entries:
+                return entries
+
+        except Exception:
+            # On tente la stratégie suivante
+            continue
+
+    # ❌ Aucune stratégie n’a fonctionné
+    raise VideoInfoFetchError("playlist_private")
 
 def is_playlist_url(url):
     """

@@ -940,11 +940,12 @@ class SingleDownloadTab:
                         from .utils import ask_cookies_file
 
                         path = ask_cookies_file(self.app.current_language)
-
                         if path:
                             self.app.cookies_path = path
+                            from .config_manager import set_cookies_path
+                            set_cookies_path(path)
+                            self._process_url(url)
                             loading_frame.stop()
-                            self._process_url(url)  # 🔁 retry automatique
                             return
 
                         # utilisateur a annulé → afficher erreur normale
