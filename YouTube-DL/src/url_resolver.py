@@ -21,7 +21,7 @@ class UrlResolveError(Exception):
         super().__init__(message_key)
 
 
-def resolve_url(url: str):
+def resolve_url(url: str, cookies_path=None):
     """
     Résout une URL YouTube et retourne une liste d'entrées vidéo.
 
@@ -39,7 +39,7 @@ def resolve_url(url: str):
         raise UrlResolveError("enter_valid_url")
 
     try:
-        entries = extract_playlist_entries(url)
+        entries = extract_playlist_entries(url, cookies_path=cookies_path)
 
     except InvalidURLError:
         # URL mal formée / non reconnue

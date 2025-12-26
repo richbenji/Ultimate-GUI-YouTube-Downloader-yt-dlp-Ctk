@@ -58,3 +58,13 @@ def format_bytes_iec(size_bytes, precision=2):
 
     return f"{size_bytes:.{precision}f} PiB"
 
+def ask_cookies_file(language):
+    """
+    Demande à l'utilisateur de sélectionner un fichier cookies.txt
+    """
+    path = filedialog.askopenfilename(
+        title=get_text("select_cookies_file", language),
+        filetypes=[("Cookies file", "*.txt")]
+    )
+    return path if path else None
+

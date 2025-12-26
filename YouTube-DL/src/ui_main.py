@@ -5,11 +5,15 @@ from .utils import load_custom_font, load_logo_image
 from .ui_single_tab import SingleDownloadTab
 from .ui_batch_tab import BatchDownloadTab
 from .ui_multiple_tab import MultipleDownloadTab
+from .settings import COOKIES_FILE
+
 
 
 class YouTubeDownloader(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        self.cookies_path = str(COOKIES_FILE) if COOKIES_FILE.exists() else None
 
         # Langue par défaut
         self.current_language = "fr"

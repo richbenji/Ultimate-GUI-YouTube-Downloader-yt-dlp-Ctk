@@ -3,7 +3,7 @@ import customtkinter as ctk
 from tkinter import messagebox, ttk
 from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
-from .utils import ask_output_folder, format_bytes_iec
+from .utils import ask_output_folder, format_bytes_iec, ask_cookies_file
 from .url_resolver import resolve_url, UrlResolveError
 
 
@@ -924,7 +924,7 @@ class SingleDownloadTab:
 
         def worker():
             try:
-                entries = resolve_url(url)
+                entries = resolve_url(url, cookies_path=self.app.cookies_path)
 
                 self.app.after(
                     0,
@@ -932,11 +932,31 @@ class SingleDownloadTab:
                 )
 
             except UrlResolveError as err:
-                message_key = err.message_key  # capture immédiate
 
+                # 🔐 Playlist privée sans cookies → demander cookies.txt
+                if err.message_key == "playlist_private" and not self.app.cookies_path:
+
+                    def ask_cookie_and_retry():
+                        from .utils import ask_cookies_file
+
+                        path = ask_cookies_file(self.app.current_language)
+
+                        if path:
+                            self.app.cookies_path = path
+                            loading_frame.stop()
+                            self._process_url(url)  # 🔁 retry automatique
+                            return
+
+                        # utilisateur a annulé → afficher erreur normale
+                        self._on_extraction_error(err.message_key, loading_frame)
+
+                    self.app.after(0, ask_cookie_and_retry)
+                    return
+
+                # ❌ Tous les autres cas → affichage normal
                 self.app.after(
                     0,
-                    lambda mk=message_key: self._on_extraction_error(mk, loading_frame)
+                    lambda mk=err.message_key: self._on_extraction_error(mk, loading_frame)
                 )
 
         threading.Thread(target=worker, daemon=True).start()
