@@ -1,14 +1,14 @@
 import os
 import customtkinter as ctk
 from .translations import get_text
-from .utils import load_custom_font, load_logo_image
+from .utils import load_custom_font, load_logo_image, ask_cookies_file
 from .ui_single_tab import SingleDownloadTab
 from .ui_batch_tab import BatchDownloadTab
 from .ui_multiple_tab import MultipleDownloadTab
 from .settings import COOKIES_FILE
 from .config_manager import get_cookies_path
 from pathlib import Path
-
+from .cookies_manager import init_cookies, update_cookies_path
 
 
 
@@ -17,8 +17,10 @@ class YouTubeDownloader(ctk.CTk):
         super().__init__()
 
         #self.cookies_path = str(COOKIES_FILE) if COOKIES_FILE.exists() else None
-        cookies = get_cookies_path()
-        self.cookies_path = cookies if cookies and Path(cookies).exists() else None
+        #cookies = get_cookies_path()
+        #self.cookies_path = cookies if cookies and Path(cookies).exists() else None
+        self.cookies_path = init_cookies()
+
 
         # Langue par défaut
         self.current_language = "fr"
@@ -154,3 +156,9 @@ class YouTubeDownloader(ctk.CTk):
         self.language_combo.set(self.available_languages[self.current_language])
         self.single_tab_ui.refresh_texts()
         self.batch_tab_ui.refresh_texts()
+
+    def change_cookies(self):
+        path = ask_cookies_file(self.current_language)
+        if path:
+            self.cookies_path = update_cookies_path(path)
+

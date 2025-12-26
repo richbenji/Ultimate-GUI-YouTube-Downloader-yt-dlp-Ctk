@@ -1,14 +1,16 @@
 import tkinter as tk
 import customtkinter as ctk
+import threading
+
 from tkinter import messagebox, ttk
+from io import BytesIO
+
 from .translations import get_text
 from .download_threads import InfoThread, DownloadThread
 from .utils import ask_output_folder, format_bytes_iec, ask_cookies_file
 from .url_resolver import resolve_url, UrlResolveError
+from .config_manager import set_cookies_path
 
-
-import threading
-from io import BytesIO
 
 # optional imports for thumbnail; handled gracefully if absent
 try:
@@ -937,12 +939,10 @@ class SingleDownloadTab:
                 if err.message_key == "playlist_private" and not self.app.cookies_path:
 
                     def ask_cookie_and_retry():
-                        from .utils import ask_cookies_file
 
                         path = ask_cookies_file(self.app.current_language)
                         if path:
                             self.app.cookies_path = path
-                            from .config_manager import set_cookies_path
                             set_cookies_path(path)
                             self._process_url(url)
                             loading_frame.stop()
