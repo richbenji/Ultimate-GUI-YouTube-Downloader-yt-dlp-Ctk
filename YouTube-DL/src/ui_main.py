@@ -35,7 +35,7 @@ class YouTubeDownloader(ctk.CTk):
         }
 
         self.title(get_text("app_title", self.current_language))
-        self.geometry("800x700")
+        self.geometry("1000x700")
 
         # Apparence
         self.appearance_mode = "dark"  # suivi du mode choisi

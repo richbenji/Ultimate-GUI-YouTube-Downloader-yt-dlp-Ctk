@@ -38,6 +38,9 @@ TRANSLATIONS = {
         "no_resolutions_found": "Pas de résolutions trouvées",
         "no_bitrates_found": "Pas de bitrates trouvées",
         "loading" : "⏳ Chargement en cours...",
+        "paste_multiple_urls": "Coller plusieurs URLs",
+        "paste_multiple_urls_hint": "Collez une URL par ligne :",
+        "add_urls": "Ajouter",
 
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",

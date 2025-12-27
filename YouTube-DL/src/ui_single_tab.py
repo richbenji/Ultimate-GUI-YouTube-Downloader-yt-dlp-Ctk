@@ -701,6 +701,13 @@ class SingleDownloadTab:
         )
         self.check_url_btn.pack(side="left", padx=5)
 
+        self.paste_multi_btn = ctk.CTkButton(
+            url_frame,
+            text="📋 " + get_text("paste_multiple_urls", self.app.current_language),
+            command=self.open_multi_url_popup
+        )
+        self.paste_multi_btn.pack(side="left", padx=5)
+
         # Bouton : charger une liste d’URLs depuis un fichier
         self.load_file_btn = ctk.CTkButton(
             url_frame,
@@ -754,6 +761,38 @@ class SingleDownloadTab:
 
 
     # ---------------- UI helpers ----------------
+
+    def open_multi_url_popup(self):
+        popup = ctk.CTkToplevel(self.app)
+        popup.title(get_text("paste_multiple_urls", self.app.current_language))
+        popup.geometry("500x300")
+        popup.transient(self.app)
+
+        popup.after(10, popup.grab_set)  # ✅ FIX IMPORTANT
+
+        label = ctk.CTkLabel(
+            popup,
+            text=get_text("paste_multiple_urls_hint", self.app.current_language)
+        )
+        label.pack(pady=10)
+
+        textbox = ctk.CTkTextbox(popup)
+        textbox.pack(fill="both", expand=True, padx=10, pady=5)
+
+        def add_urls():
+            content = textbox.get("0.0", "end").strip()
+            urls = [u.strip() for u in content.splitlines() if u.strip()]
+            popup.destroy()
+
+            for url in urls:
+                self._process_url(url)
+
+        add_btn = ctk.CTkButton(
+            popup,
+            text=get_text("add_urls", self.app.current_language),
+            command=add_urls
+        )
+        add_btn.pack(pady=10)
 
     def refresh_texts(self):
         """Met à jour les textes traduits de l'onglet 'Téléchargement unique'."""
