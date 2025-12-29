@@ -73,6 +73,7 @@ TRANSLATIONS = {
         "file_load_error": "Erreur lors du chargement du fichier: {error}",
         "fetching_impossible": "Impossible d'obtenir les informations de la vidéo",
         "playlist_private": "Playlist privée — connexion requise. Veuillez fournir des cookies YouTube.",
+        "no_tutorial_available" : "Aucun tutoriel disponible",
 
         # Nouveaux messages / utilisés par les threads
         "download_canceled": "Téléchargement annulé",

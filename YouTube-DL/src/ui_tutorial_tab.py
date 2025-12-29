@@ -2,6 +2,8 @@ from pathlib import Path
 import customtkinter as ctk
 import markdown
 from tkinterweb import HtmlFrame
+from .translations import get_text
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TUTORIAL_DIR = BASE_DIR / "assets" / "tutorials"
@@ -50,7 +52,7 @@ class TutorialTab:
         """Affiche un message si aucun tutoriel n'est disponible"""
         label = ctk.CTkLabel(
             self.container,
-            text="📚 Aucun tutoriel disponible",
+            text="📚 " + get_text("no_tutorial_available", self.app.current_language),
             font=ctk.CTkFont(size=16)
         )
         label.pack(pady=50)
