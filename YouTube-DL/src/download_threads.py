@@ -304,26 +304,41 @@ class BatchDownloadThread(threading.Thread):
 
                 # ----- Construction des options -----
                 if self.download_type == "video":
-                    height = self.resolution[:-1] if (self.resolution and self.resolution.endswith('p')) else None
-                    format_str = 'bestvideo[ext=mp4]'
-                    if height:
-                        format_str = f'bestvideo[height<={height}][ext=mp4]'
+                    # 🎯 CAS 1 — Best format (comme single tab)
+                    if self.resolution == "Best":
+                        ydl_opts = {
+                            'format': 'bestvideo+bestaudio/best',
+                            'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
+                            'progress_hooks': [self._progress_hook_factory(base_percent)],
+                            'quiet': True,
+                            'no_warnings': True
+                        }
 
-                    if self.bitrate and self.bitrate != "Best":
-                        bitrate_val = self.bitrate.replace(" kbps", "")
-                        format_str += f'+bestaudio[abr<={bitrate_val}+10][abr>={bitrate_val}-10]/bestaudio[ext=m4a]'
+                    # 🎯 CAS 2 — Résolution contrôlée
                     else:
-                        format_str += '+bestaudio[ext=m4a]'
+                        height = self.resolution[:-1] if self.resolution.endswith('p') else None
+                        format_str = 'bestvideo[ext=mp4]'
 
-                    ydl_opts = {
-                        'format': format_str + '/best',
-                        'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                        'progress_hooks': [self._progress_hook_factory(base_percent)],
-                        'quiet': True,
-                        'no_warnings': True,
-                        'merge_output_format': 'mp4'
-                    }
+                        if height:
+                            format_str = f'bestvideo[height<={height}][ext=mp4]'
 
+                        if self.bitrate and self.bitrate != "Best":
+                            bitrate_val = self.bitrate.replace(" kbps", "")
+                            format_str += (
+                                f'+bestaudio[abr<={bitrate_val}+10]'
+                                f'[abr>={bitrate_val}-10]/bestaudio[ext=m4a]'
+                            )
+                        else:
+                            format_str += '+bestaudio[ext=m4a]'
+
+                        ydl_opts = {
+                            'format': format_str + '/best',
+                            'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
+                            'progress_hooks': [self._progress_hook_factory(base_percent)],
+                            'quiet': True,
+                            'no_warnings': True,
+                            'merge_output_format': 'mp4'
+                        }
                 else:
                     preferred_quality = self.bitrate.replace(" kbps", "") if (self.bitrate and self.bitrate != "Best") else "192"
 

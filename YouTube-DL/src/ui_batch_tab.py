@@ -55,11 +55,11 @@ class BatchDownloadTab:
                                                    text=get_text("resolution_label", self.app.current_language)
                                                    )
         self.batch_resolution_label.pack(side="left", padx=5)
-        self.batch_resolution_var = tk.StringVar(value="720p")
+        self.batch_resolution_var = tk.StringVar(value="Best")
         self.batch_resolution_combo = ctk.CTkComboBox(
             res_frame,
             variable=self.batch_resolution_var,
-            values=["1080p", "720p", "480p", "360p", "240p", "144p"]
+            values=["Best", "1080p", "720p", "480p", "360p", "240p", "144p"]
         )
         self.batch_resolution_combo.pack(side="left", padx=5)
 

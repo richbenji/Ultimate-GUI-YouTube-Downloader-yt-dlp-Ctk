@@ -11,7 +11,7 @@ TRANSLATIONS = {
         # Onglets
         "single_download_tab": "Téléchargement unique",
         "batch_download_tab": "Téléchargement par lot",
-        "multiple_download_tab": "Téléchargement multiple",
+        "tutorial": "Tutoriel",
 
         # Interface principale
         "youtube_url": "URL YouTube:",
@@ -41,6 +41,7 @@ TRANSLATIONS = {
         "paste_multiple_urls": "Coller plusieurs URLs",
         "paste_multiple_urls_hint": "Collez une URL par ligne :",
         "add_urls": "Ajouter",
+        "tutorial_title": "📘 Guide d’utilisation",
 
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",
@@ -73,7 +74,6 @@ TRANSLATIONS = {
         "fetching_impossible": "Impossible d'obtenir les informations de la vidéo",
         "playlist_private": "Playlist privée — connexion requise. Veuillez fournir des cookies YouTube.",
 
-
         # Nouveaux messages / utilisés par les threads
         "download_canceled": "Téléchargement annulé",
         "downloading": "Téléchargement:",
@@ -98,7 +98,7 @@ TRANSLATIONS = {
         # Tabs
         "single_download_tab": "Single Download",
         "batch_download_tab": "Batch Download",
-        "multiple_download_tab": "Multiple Download",
+        "tutorial": "Tutorial",
 
         # Main interface
         "youtube_url": "YouTube URL:",

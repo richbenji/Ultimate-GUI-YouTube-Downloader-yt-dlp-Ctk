@@ -4,12 +4,8 @@ from .translations import get_text
 from .utils import load_custom_font, load_logo_image, ask_cookies_file
 from .ui_single_tab import SingleDownloadTab
 from .ui_batch_tab import BatchDownloadTab
-from .ui_multiple_tab import MultipleDownloadTab
-from .settings import COOKIES_FILE
-from .config_manager import get_cookies_path
-from pathlib import Path
 from .cookies_manager import init_cookies, update_cookies_path
-
+from .ui_tutorial_tab import TutorialTab
 
 
 class YouTubeDownloader(ctk.CTk):
@@ -135,12 +131,12 @@ class YouTubeDownloader(ctk.CTk):
         # Onglets
         self.tab_single = self.tabview.add(get_text("single_download_tab", self.current_language))
         self.tab_batch = self.tabview.add(get_text("batch_download_tab", self.current_language))
-        self.tab_multiple = self.tabview.add(get_text("multiple_download_tab", self.current_language))
+        self.tab_tutorial = self.tabview.add(get_text("tutorial", self.current_language))
 
         # Injection des sous-interfaces
         self.single_tab_ui = SingleDownloadTab(self.tab_single, self)
         self.batch_tab_ui = BatchDownloadTab(self.tab_batch, self)
-        self.batch_tab_multiple = MultipleDownloadTab(self.tab_batch, self)
+        self.tutorial_tab_ui = TutorialTab(self.tab_tutorial, self)
 
     def toggle_theme(self):
         if self.theme_switch.get() == 1:
@@ -149,6 +145,10 @@ class YouTubeDownloader(ctk.CTk):
         else:
             ctk.set_appearance_mode("light")
             self.appearance_mode = "light"
+
+        # Rafraîchir le tutorial avec le nouveau thème
+        if hasattr(self, 'tutorial_tab_ui'):
+            self.tutorial_tab_ui.refresh_theme()
 
     def change_language(self, selected_language_name):
         for lang_code, lang_name in self.available_languages.items():
@@ -164,6 +164,10 @@ class YouTubeDownloader(ctk.CTk):
         self.language_combo.set(self.available_languages[self.current_language])
         self.single_tab_ui.refresh_texts()
         self.batch_tab_ui.refresh_texts()
+
+        # Rafraîchir le tutorial avec la nouvelle langue
+        if hasattr(self, 'tutorial_tab_ui'):
+            self.tutorial_tab_ui.refresh_texts()
 
     def change_cookies(self):
         path = ask_cookies_file(self.current_language)
