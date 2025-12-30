@@ -91,7 +91,7 @@ class YouTubeDownloader(ctk.CTk):
 
         self.cookies_btn = ctk.CTkButton(
             left_container,
-            text="🍪 Select cookies.txt",
+            text="🍪 ⬆️ cookies.txt",
             width=120,
             command=self.change_cookies
         )

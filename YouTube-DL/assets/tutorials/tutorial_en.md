@@ -75,7 +75,7 @@ If the automatic method doesn't work or if you use another browser, you must pro
    - **Chrome**: [Get cookies.txt LOCALLY](https://chrome.google.com/webstore)
 2. Log in to YouTube
 3. **Export** your cookies in Netscape format (`.txt` file)
-4. **Click** on the "🍪 Select cookies.txt" button at the top left of the application
+4. **Click** on the "🍪 ⬆️ cookies.txt" button at the top left of the application
 5. **Select** your `cookies.txt` file
 6. **Test** with your private playlist
 

@@ -304,7 +304,7 @@ class BatchDownloadThread(threading.Thread):
 
                 # ----- Construction des options -----
                 if self.download_type == "video":
-                    # 🎯 CAS 1 — Best format (comme single tab)
+                    # CAS 1 — Best format (comme single tab)
                     if self.resolution == "Best":
                         ydl_opts = {
                             'format': 'bestvideo+bestaudio/best',
@@ -314,7 +314,7 @@ class BatchDownloadThread(threading.Thread):
                             'no_warnings': True
                         }
 
-                    # 🎯 CAS 2 — Résolution contrôlée
+                    # CAS 2 — Résolution contrôlée
                     else:
                         height = self.resolution[:-1] if self.resolution.endswith('p') else None
                         format_str = 'bestvideo[ext=mp4]'

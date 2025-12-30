@@ -444,18 +444,18 @@ class VideoItemFrame(ctk.CTkFrame):
         tabview.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Onglet texte
-        tab_text = tabview.add("Résumé texte")
+        tab_text = tabview.add(get_text("text_summary", self.app.current_language))
         textbox = ctk.CTkTextbox(tab_text, wrap="word", font=("Ubuntu Mono", 12))
         textbox.pack(fill="both", expand=True, padx=10, pady=10)
         textbox.insert("1.0", info_text)
         textbox.configure(state="disabled")
 
         # Onglet tableau
-        tab_table = tabview.add("Tableau")
+        tab_table = tabview.add(get_text("tab", self.app.current_language))
         show_video_table(tab_table, self.info)
 
         # Onglet infos détaillées
-        tab_details = tabview.add("Infos détaillées")
+        tab_details = tabview.add(get_text("detailed_summary", self.app.current_language))
         self._build_detailed_info_tab(tab_details)
 
     def _build_detailed_info_tab(self, parent):
@@ -489,21 +489,30 @@ class VideoItemFrame(ctk.CTkFrame):
         def info_row(label, value):
             row = ctk.CTkFrame(info_frame)
             row.pack(fill="x", pady=2, padx=10)
+
             ctk.CTkLabel(
-                row, text=label, width=160, anchor="w", text_color="gray"
+                row,
+                text=label,
+                width=160,
+                anchor="w",
+                text_color="gray"
             ).pack(side="left")
+
             ctk.CTkLabel(
-                row, text=value, anchor="w", wraplength=600
+                row,
+                text=value,
+                anchor="w",
+                wraplength=600
             ).pack(side="left", fill="x", expand=True)
 
-        info_row("Titre :", self.info.title)
-        info_row("Auteur :", self.info.uploader)
-        info_row("Date de publication :", self.info.upload_date)
-        info_row("Durée :", self._format_duration(self.info.duration))
-        info_row("Vues :", f"{self.info.view_count:,}")
-        info_row("Likes :", f"{self.info.like_count:,}")
-        info_row("ID vidéo :", self.info.video_id)
-        info_row("URL :", self.info.url)
+        info_row(get_text("title", self.app.current_language), self.info.title)
+        info_row(get_text("author", self.app.current_language), self.info.uploader)
+        info_row(get_text("upload_date", self.app.current_language), self.info.upload_date)
+        info_row(get_text("duration", self.app.current_language), self._format_duration(self.info.duration))
+        info_row(get_text("views", self.app.current_language), f"{self.info.view_count:,}")
+        info_row(get_text("likes", self.app.current_language), f"{self.info.like_count:,}")
+        info_row(get_text("video_id", self.app.current_language), self.info.video_id)
+        info_row(get_text("url", self.app.current_language), self.info.url)
 
         # ===================== DESCRIPTION =====================
         desc_frame = ctk.CTkFrame(container)
@@ -511,7 +520,7 @@ class VideoItemFrame(ctk.CTkFrame):
 
         ctk.CTkLabel(
             desc_frame,
-            text="Description",
+            text=get_text("description", self.app.current_language),
             font=ctk.CTkFont(size=15, weight="bold")
         ).pack(anchor="w", padx=10, pady=(10, 5))
 
@@ -521,7 +530,7 @@ class VideoItemFrame(ctk.CTkFrame):
             wrap="word"
         )
         desc_box.pack(fill="both", expand=True, padx=10, pady=(0, 10))
-        desc_box.insert("1.0", self.info.description or "Aucune description.")
+        desc_box.insert("1.0", self.info.description or get_text("no_description", self.app.current_language))
         desc_box.configure(state="disabled")
 
         # ===================== TABLEAU DES FORMATS =====================
@@ -530,7 +539,7 @@ class VideoItemFrame(ctk.CTkFrame):
 
         ctk.CTkLabel(
             table_container,
-            text="Formats disponibles",
+            text=get_text("available_formats", self.app.current_language),
             font=ctk.CTkFont(size=15, weight="bold")
         ).pack(anchor="w", padx=10, pady=(10, 5))
 
@@ -584,7 +593,7 @@ class VideoItemFrame(ctk.CTkFrame):
             ctk.CTkLabel(
                 best_frame,
                 text=(
-                    f"🎬 Meilleur format vidéo seule : "
+                    f"🎬 {get_text("best_video_format", self.app.current_language)}"
                     f"Format ID: {best_video.get('format_id')} | "
                     f"{best_video.get('resolution')} – "
                     f"{best_video.get('vbr')} kbps – "
@@ -596,7 +605,7 @@ class VideoItemFrame(ctk.CTkFrame):
             ctk.CTkLabel(
                 best_frame,
                 text=(
-                    f"🎧 Meilleur format audio seul : "
+                    f"🎧 {get_text("best_audio_format", self.app.current_language)}"
                     f"Format ID: {best_audio.get('format_id')} | "
                     f"{best_audio.get('abr')} kbps – "
                     f"{best_audio.get('ext')}"
@@ -857,15 +866,20 @@ class SingleDownloadTab:
         if not entries:
             messagebox.showwarning(
                 get_text("warning", self.app.current_language),
-                "Aucune vidéo trouvée dans cette URL."
+                get_text("no_video", self.app.current_language)
             )
             self.check_url_btn.configure(state="normal")
             return
 
-        if len(entries) > 1:
-            self.single_status_label.configure(
-                text=f"📋 Playlist détectée : {len(entries)} vidéos trouvées. Chargement..."
-            )
+        count = len(entries)
+        key = (
+            "playlist_detected_singular"
+            if count == 1
+            else "playlist_detected_plural"
+        )
+        self.single_status_label.configure(
+            text=get_text(key, self.app.current_language).format(count=count)
+        )
 
         for entry in entries:
             video_url = entry.get("url")
@@ -878,7 +892,7 @@ class SingleDownloadTab:
             # Créer le loader
             video_loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
             video_loading_frame.loading_text.configure(
-                text=f"⏳ {entry.get('title', 'Chargement...')}"
+                text=f"⏳ {entry.get('title', get_text("loading", self.app.current_language))}"
             )
 
             # 🔼 Pack en haut
@@ -902,13 +916,21 @@ class SingleDownloadTab:
 
         self.check_url_btn.configure(state="normal")
 
-        if len(entries) > 1:
-            self.app.after(
-                800,
-                lambda: self.single_status_label.configure(
-                    text=f"✅ {len(entries)} vidéos ajoutées à la file d'attente"
-                )
+        count = len(entries)
+        key = (
+            "queue_added_singular"
+            if count == 1
+            else "queue_added_plural"
+        )
+        self.app.after(
+            800,
+            lambda: self.single_status_label.configure(
+                text=get_text(
+                    key,
+                    self.app.current_language
+                ).format(count=count)
             )
+        )
 
     def _on_extraction_error(self, message_key, loading_frame):
         loading_frame.stop()
@@ -939,7 +961,10 @@ class SingleDownloadTab:
         except Exception as e:
             messagebox.showerror(
                 get_text("error", self.app.current_language),
-                f"Impossible de lire le fichier : {e}"
+                get_text(
+                    "cannot_read_file",
+                    self.app.current_language
+                ).format(error=e)
             )
             return
 
@@ -1231,9 +1256,11 @@ class SingleDownloadTab:
                                     state="normal"
                                     )
         self.check_url_btn.configure(state="normal")
-        self.single_status_label.configure(text=get_text("canceling_download", self.app.current_language) if get_text("canceling_download", self.app.current_language) else "Annulation en cours...")
         # facultatif : reset progress bar
-        # self.single_progress_bar.set(0)
+        #self.single_progress_bar.set(0)
+
+        self.single_status_label.configure(text=get_text("canceling_download", self.app.current_language))
+
 
     # ----------- callbacks internes pour mise à jour UI -----------
     def _on_thread_progress(self, thread, pct):
@@ -1270,11 +1297,26 @@ class SingleDownloadTab:
 
             # ---------------- MESSAGE ----------------
 
+            # Formater le ratio
+            ratio_key = (
+                "downloads_success_ratio_singular"
+                if success_count == 1
+                else "downloads_success_ratio_plural"
+            )
+
+            downloads_status = get_text(
+                ratio_key,
+                self.app.current_language
+            ).format(
+                success=success_count,
+                total=total_count
+            )
+
             if success_count == total_count:
                 title = get_text("download_complete", self.app.current_language)
                 message = (
                     f"{get_text('download_complete_message', self.app.current_language)}\n\n"
-                    f"{success_count}/{total_count} téléchargements réussis"
+                    f"{downloads_status}"
                 )
                 messagebox.showinfo(title, message)
 
@@ -1282,7 +1324,7 @@ class SingleDownloadTab:
                 title = get_text("download_failed", self.app.current_language)
                 message = (
                     f"{get_text('partial_download_message', self.app.current_language)}\n\n"
-                    f"{success_count}/{total_count} téléchargements réussis"
+                    f"{downloads_status}"
                 )
                 messagebox.showwarning(title, message)
 

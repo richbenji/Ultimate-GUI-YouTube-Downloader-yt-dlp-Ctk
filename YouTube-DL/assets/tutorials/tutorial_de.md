@@ -74,7 +74,7 @@ Wenn die automatische Methode nicht funktioniert oder Sie einen anderen Browser 
 
 2. Melden Sie sich bei YouTube an
 3. **Exportieren Sie** Ihre Cookies im Netscape-Format (`.txt`-Datei)
-4. **Klicken Sie** auf die Schaltfläche "🍪 Select cookies.txt" oben links in der Anwendung
+4. **Klicken Sie** auf die Schaltfläche "🍪 ⬆️ cookies.txt" oben links in der Anwendung
 5. **Wählen Sie** Ihre `cookies.txt`-Datei aus
 6. **Testen Sie** mit Ihrer privaten Playlist
 

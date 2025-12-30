@@ -75,7 +75,7 @@ Si el método automático no funciona o si usas otro navegador, debes proporcion
    - **Chrome**: [Get cookies.txt LOCALLY](https://chrome.google.com/webstore)
 2. Conéctate a YouTube
 3. **Exporta** tus cookies en formato Netscape (archivo `.txt`)
-4. **Haz clic** en el botón "🍪 Select cookies.txt" en la parte superior izquierda de la aplicación
+4. **Haz clic** en el botón "🍪 ⬆️ cookies.txt" en la parte superior izquierda de la aplicación
 5. **Selecciona** tu archivo `cookies.txt`
 6. **Prueba** con tu lista de reproducción privada
 

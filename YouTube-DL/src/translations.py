@@ -12,6 +12,9 @@ TRANSLATIONS = {
         "single_download_tab": "Téléchargement unique",
         "batch_download_tab": "Téléchargement par lot",
         "tutorial": "Tutoriel",
+        "text_summary": "Résumé texte",
+        "tab": "Tableau",
+        "detailed_summary": "Résumé détaillé",
 
         # Interface principale
         "youtube_url": "URL YouTube:",
@@ -43,6 +46,21 @@ TRANSLATIONS = {
         "add_urls": "Ajouter",
         "tutorial_title": "📘 Guide d’utilisation",
 
+        # Informations vidéos
+        "title": "Titre",
+        "author": "Auteur",
+        "upload_date": "Date de publication",
+        "duration": "Durée",
+        "views": "Vues",
+        "likes": "Likes",
+        "video_id": "ID vidéo",
+        "url": "URL",
+        "description": "Description",
+        "no_description": "Aucune description.",
+        "available_formats": "formats disponibles",
+        "best_video_format": "Meilleur format vidéo seule : ",
+        "best_audio_format": "Meilleur format audio seul : ",
+
         # Téléchargement par lot
         "urls_list_label": "Liste des URLs YouTube (une par ligne):",
         "load_from_file_button": "Charger une liste depuis un fichier",
@@ -59,6 +77,11 @@ TRANSLATIONS = {
         "add_at_least_one_url": "Veuillez ajouter au moins une URL",
         "no_valid_urls": "Aucune URL valide trouvée",
         "canceling_batch_download": "Annulation du téléchargement par lot...",
+        "playlist_detected_singular": "📋 Playlist détectée : {count} vidéo trouvée. Chargement...",
+        "playlist_detected_plural": "📋 Playlist détectée : {count} vidéos trouvées. Chargement...",
+        "queue_added_singular": "✅ {count} vidéo ajoutée à la file d'attente",
+        "queue_added_plural": "✅ {count} vidéos ajoutées à la file d'attente",
+        "cannot_read_file": "Impossible de lire le fichier : {error}",
 
         # Messages de dialogue
         "download_complete": "Téléchargement terminé",
@@ -74,6 +97,9 @@ TRANSLATIONS = {
         "fetching_impossible": "Impossible d'obtenir les informations de la vidéo",
         "playlist_private": "Playlist privée — connexion requise. Veuillez fournir des cookies YouTube.",
         "no_tutorial_available" : "Aucun tutoriel disponible",
+        "no_video": "Aucune vidéo trouvée dans cette URL",
+        "downloads_success_ratio_singular": "✅ {success}/{total} téléchargement réussi",
+        "downloads_success_ratio_plural": "✅ {success}/{total} téléchargements réussis",
 
         # Nouveaux messages / utilisés par les threads
         "download_canceled": "Téléchargement annulé",
@@ -123,6 +149,18 @@ TRANSLATIONS = {
         "warning": "Warning",
         "error": "Error",
 
+        # Video information
+        "title": "Title",
+        "author": "Author",
+        "upload_date": "Upload date",
+        "duration": "Duration",
+        "views": "Views",
+        "likes": "Likes",
+        "video_id": "Video ID",
+        "url": "URL",
+        "description": "Description",
+        "no_description": "No description.",
+
         # Batch download
         "urls_list_label": "YouTube URLs list (one per line):",
         "load_from_file_button": "Load list from file",
@@ -139,6 +177,8 @@ TRANSLATIONS = {
         "add_at_least_one_url": "Please add at least one URL",
         "no_valid_urls": "No valid URLs found",
         "canceling_batch_download": "Canceling batch download...",
+        "playlist_detected": "📋 Playlist detected: {count} videos found. Loading...",
+
 
         # Dialog messages
         "download_complete": "Download Complete",
@@ -200,6 +240,18 @@ TRANSLATIONS = {
         "warning": "Advertencia",
         "error": "Error",
 
+        # información en vídeo
+        "title": "Título",
+        "author": "Autor",
+        "upload_date": "Fecha de publicación",
+        "duration": "Duración",
+        "views": "Vistas",
+        "likes": "Me gusta",
+        "video_id": "ID del vídeo",
+        "url": "URL",
+        "description": "Descripción",
+        "no_description": "Sin descripción.",
+
         # Descarga por lotes
         "urls_list_label": "Lista de URLs de YouTube (una por línea):",
         "load_from_file_button": "Cargar lista desde archivo",
@@ -216,6 +268,7 @@ TRANSLATIONS = {
         "add_at_least_one_url": "Por favor, añade al menos una URL",
         "no_valid_urls": "No se encontraron URLs válidas",
         "canceling_batch_download": "Cancelando descarga por lotes...",
+        "playlist_detected": "📋 Lista de reproducción detectada: {count} vídeos encontrados. Cargando...",
 
         # Diálogos
         "download_complete": "Descarga completa",
@@ -277,6 +330,18 @@ TRANSLATIONS = {
         "warning": "Attenzione",
         "error": "Errore",
 
+        # informazioni video
+        "title": "Titolo",
+        "author": "Autore",
+        "upload_date": "Data di pubblicazione",
+        "duration": "Durata",
+        "views": "Visualizzazioni",
+        "likes": "Mi piace",
+        "video_id": "ID video",
+        "url": "URL",
+        "description": "Descrizione",
+        "no_description": "Nessuna descrizione.",
+
         # Download multiplo
         "urls_list_label": "Elenco di URL YouTube (uno per riga):",
         "load_from_file_button": "Carica elenco da file",
@@ -293,6 +358,7 @@ TRANSLATIONS = {
         "add_at_least_one_url": "Aggiungi almeno un URL",
         "no_valid_urls": "Nessun URL valido trovato",
         "canceling_batch_download": "Annullamento del download multiplo...",
+        "playlist_detected": "📋 Playlist rilevata: {count} video trovati. Caricamento...",
 
         # Messaggi di dialogo
         "download_complete": "Download completato",
@@ -354,6 +420,18 @@ TRANSLATIONS = {
         "warning": "Warnung",
         "error": "Fehler",
 
+        # Videoinformationen
+        "title": "Titel",
+        "author": "Autor",
+        "upload_date": "Veröffentlichungsdatum",
+        "duration": "Dauer",
+        "views": "Aufrufe",
+        "likes": "Likes",
+        "video_id": "Video-ID",
+        "url": "URL",
+        "description": "Beschreibung",
+        "no_description": "Keine Beschreibung.",
+
         # Stapel-Download
         "urls_list_label": "YouTube-URLs (eine pro Zeile):",
         "load_from_file_button": "Liste aus Datei laden",
@@ -370,6 +448,7 @@ TRANSLATIONS = {
         "add_at_least_one_url": "Bitte mindestens eine URL hinzufügen",
         "no_valid_urls": "Keine gültigen URLs gefunden",
         "canceling_batch_download": "Stapel-Download wird abgebrochen...",
+        "playlist_detected_plural": "📋 Playlist erkannt: {count} Videos gefunden. Laden...",
 
         # Dialogmeldungen
         "download_complete": "Download abgeschlossen",
