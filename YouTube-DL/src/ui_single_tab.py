@@ -12,7 +12,6 @@ from .url_resolver import resolve_url, UrlResolveError
 from .cookies_manager import update_cookies_path
 
 
-
 # optional imports for thumbnail; handled gracefully if absent
 try:
     import requests
@@ -886,7 +885,7 @@ class SingleDownloadTab:
             if not video_url:
                 continue
 
-            # 🔑 cacher le placeholder dès le premier ajout
+            # cacher le placeholder dès le premier ajout
             self.hide_placeholder()
 
             # Créer le loader
@@ -895,7 +894,7 @@ class SingleDownloadTab:
                 text=f"⏳ {entry.get('title', get_text("loading", self.app.current_language))}"
             )
 
-            # 🔼 Pack en haut
+            # Pack en haut
             if self.video_frames:
                 video_loading_frame.pack(fill="x", pady=5, before=self.video_frames[0])
             else:
@@ -941,7 +940,7 @@ class SingleDownloadTab:
             get_text(message_key, self.app.current_language)
         )
 
-        # 🔑 Si aucune vidéo n'a été ajoutée, on remet le placeholder
+        # Si aucune vidéo n'a été ajoutée, on remet le placeholder
         if not self.video_frames:
             self.show_placeholder()
 
@@ -979,7 +978,7 @@ class SingleDownloadTab:
             self._process_url(url)
 
     def _process_url(self, url: str):
-        # 🔑 Dès qu'on lance un traitement, on enlève le placeholder
+        # Dès qu'on lance un traitement, on enlève le placeholder
         self.hide_placeholder()
 
         loading_frame = LoadingItemFrame(self.playlist_frame, self.app)
@@ -1019,7 +1018,7 @@ class SingleDownloadTab:
                     self.app.after(0, ask_cookie_and_retry)
                     return
 
-                # ❌ Tous les autres cas → affichage normal
+                # Tous les autres cas → affichage normal
                 self.app.after(
                     0,
                     lambda mk=err.message_key: self._on_extraction_error(mk, loading_frame)

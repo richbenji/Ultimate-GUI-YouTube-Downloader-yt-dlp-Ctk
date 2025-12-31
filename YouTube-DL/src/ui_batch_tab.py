@@ -12,6 +12,8 @@ class BatchDownloadTab:
         self.parent = parent
         self.batch_download_thread = None
         self.is_downloading = False  # 🔑 état courant
+        self._batch_success_count = 0
+        self._batch_total_count = 0
         self.build_ui()
 
     def build_ui(self):
@@ -176,6 +178,14 @@ class BatchDownloadTab:
         )
         self.load_file_btn.configure(state="disabled")
 
+        self._batch_success_count = 0
+        self._batch_total_count = len(urls)
+
+        self.batch_progress_bar.set(0)
+        self.batch_status_label.configure(
+            text=get_text("download_started", self.app.current_language)
+        )
+
         # lancer thread
         self.batch_download_thread = BatchDownloadThread(
             urls,
@@ -186,7 +196,9 @@ class BatchDownloadTab:
             output_path,
             lambda v: self.app.after(0, lambda: self.batch_progress_bar.set(v / 100)),
             lambda t: self.app.after(0, lambda: self.batch_status_label.configure(text=t)),
-            lambda s: self.app.after(0, lambda: self.download_finished(s))
+            lambda success_count, total_count: self.app.after(
+                0, lambda: self.download_finished(success_count, total_count)
+            )
         )
         self.batch_download_thread.daemon = True
         self.batch_download_thread.start()
@@ -194,17 +206,43 @@ class BatchDownloadTab:
     def cancel_batch_download(self):
         if self.batch_download_thread:
             self.batch_download_thread.cancel()
+
         self.is_downloading = False
+
+        success_count = self._batch_success_count
+        total_count = self._batch_total_count
+
+        ratio_key = (
+            "downloads_success_ratio_singular"
+            if success_count == 1
+            else "downloads_success_ratio_plural"
+        )
+
+        downloads_status = get_text(
+            ratio_key,
+            self.app.current_language
+        ).format(
+            success=success_count,
+            total=total_count
+        )
+
+        # Reset UI
+        self.batch_progress_bar.set(0)
+        self.batch_status_label.configure(
+            text=get_text("ready_status", self.app.current_language)
+        )
+
         self.batch_download_btn.configure(
             text="⬇️ " + get_text("download_button", self.app.current_language),
             command=self.start_batch_download,
             state="normal"
         )
         self.load_file_btn.configure(state="normal")
-        self.batch_status_label.configure(text=get_text("canceling_batch_download", self.app.current_language))
 
-    def download_finished(self, success):
+    def download_finished(self, success_count, total_count):
         self.is_downloading = False
+
+        # Boutons
         self.batch_download_btn.configure(
             text="⬇️ " + get_text("download_button", self.app.current_language),
             command=self.start_batch_download,
@@ -212,13 +250,39 @@ class BatchDownloadTab:
         )
         self.load_file_btn.configure(state="normal")
 
-        if success:
-            self.batch_progress_bar.set(1)
-            self.batch_status_label.configure(text=get_text("batch_download_complete", self.app.current_language))
-            try:
-                messagebox.showinfo(get_text("batch_download_complete", self.app.current_language),
-                                    get_text("batch_download_complete_message", self.app.current_language))
-            except Exception:
-                pass
+        # Ratio traduit
+        ratio_key = (
+            "downloads_success_ratio_singular"
+            if success_count == 1
+            else "downloads_success_ratio_plural"
+        )
+
+        downloads_status = get_text(
+            ratio_key,
+            self.app.current_language
+        ).format(
+            success=success_count,
+            total=total_count
+        )
+
+        # Messagebox
+        if success_count == total_count:
+            title = get_text("download_complete", self.app.current_language)
+            message = (
+                f"{get_text('download_complete_message', self.app.current_language)}\n\n"
+                f"{downloads_status}"
+            )
+            messagebox.showinfo(title, message)
         else:
-            self.batch_status_label.configure(text=get_text("download_failed", self.app.current_language))
+            title = get_text("download_failed", self.app.current_language)
+            message = (
+                f"{get_text('partial_download_message', self.app.current_language)}\n\n"
+                f"{downloads_status}"
+            )
+            messagebox.showwarning(title, message)
+
+        # 🔁 Reset visuel IDENTIQUE à Single
+        self.batch_progress_bar.set(0)
+        self.batch_status_label.configure(
+            text=get_text("ready_status", self.app.current_language)
+        )

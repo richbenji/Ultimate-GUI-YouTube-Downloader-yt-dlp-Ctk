@@ -233,7 +233,6 @@ class DownloadThread(threading.Thread):
         self.is_cancelled = True
 
 
-
 # ========================= BATCH DOWNLOAD THREAD ========================
 class BatchDownloadThread(threading.Thread):
     def __init__(self, urls, app, download_type, resolution, bitrate, output_path,
@@ -251,6 +250,7 @@ class BatchDownloadThread(threading.Thread):
         self.is_cancelled = False
         self.daemon = True
         self._total_urls = max(1, len(urls))
+        self.total_count = len([u for u in urls if u.strip()])
 
     # ----- Hook fabriqué pour chaque fichier -----
     def _progress_hook_factory(self, base_percent):
@@ -307,12 +307,15 @@ class BatchDownloadThread(threading.Thread):
                     # CAS 1 — Best format (comme single tab)
                     if self.resolution == "Best":
                         ydl_opts = {
-                            'format': 'bestvideo+bestaudio/best',
+                            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
                             'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
                             'progress_hooks': [self._progress_hook_factory(base_percent)],
                             'quiet': True,
-                            'no_warnings': True
+                            'no_warnings': True,
+                            'merge_output_format': 'mp4',
+                            'nooverwrites': True
                         }
+
 
                     # CAS 2 — Résolution contrôlée
                     else:
@@ -340,10 +343,14 @@ class BatchDownloadThread(threading.Thread):
                             'merge_output_format': 'mp4'
                         }
                 else:
-                    preferred_quality = self.bitrate.replace(" kbps", "") if (self.bitrate and self.bitrate != "Best") else "192"
+                    preferred_quality = (
+                        self.bitrate.replace(" kbps", "")
+                        if (self.bitrate and self.bitrate != "Best")
+                        else "192"
+                    )
 
                     ydl_opts = {
-                        'format': 'bestaudio/best',
+                        'format': 'bestaudio[ext=m4a]/bestaudio',
                         'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
                         'progress_hooks': [self._progress_hook_factory(base_percent)],
                         'postprocessors': [{
@@ -352,7 +359,8 @@ class BatchDownloadThread(threading.Thread):
                             'preferredquality': preferred_quality,
                         }],
                         'quiet': True,
-                        'no_warnings': True
+                        'no_warnings': True,
+                        'nooverwrites': True
                     }
 
                 # ----- Téléchargement -----
@@ -362,28 +370,25 @@ class BatchDownloadThread(threading.Thread):
                 successful += 1
 
             # -- Fin par lot --
-            if self.progress_callback:
-                self.progress_callback(100)
-
             if self.status_callback:
                 self.status_callback(get_text("batch_download_complete", self.app.current_language))
 
             if self.finished_callback:
-                self.finished_callback(True)
+                self.finished_callback(successful, self.total_count)
 
         # ----- Annulation propre -----
         except DownloadCancelled:
             if self.status_callback:
                 self.status_callback(get_text("canceling_batch_download", self.app.current_language))
             if self.finished_callback:
-                self.finished_callback(False)
+                self.finished_callback(successful, self.total_count)
 
         # ----- Erreurs réelles -----
         except Exception as e:
             if self.status_callback:
                 self.status_callback(f"{get_text('error_prefix', self.app.current_language)} {e}")
             if self.finished_callback:
-                self.finished_callback(False)
+                self.finished_callback(successful, self.total_count)
 
     def cancel(self):
         self.is_cancelled = True
