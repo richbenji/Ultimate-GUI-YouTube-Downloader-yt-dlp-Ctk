@@ -1244,35 +1244,81 @@ class SingleDownloadTab:
             thread.start()
 
     def cancel_downloads(self):
-        """Annule tous les téléchargements en cours et remet le bouton en mode 'Télécharger'."""
+        # Annuler les threads
         for t in self.active_threads:
             try:
                 t.cancel()
             except Exception:
                 pass
+
+        # Compter AVANT reset
+        success_count = sum(self._download_results)
+        total_count = self._expected_threads
+
+        # Stop logique
         self.is_downloading = False
-        self.download_btn.configure(text="⬇️ " + get_text("download_button", self.app.current_language),
-                                    command=self.start_download_all,
-                                    state="normal"
-                                    )
+
+        # Construire le ratio AVANT nettoyage
+        ratio_key = (
+            "downloads_success_ratio_singular"
+            if success_count == 1
+            else "downloads_success_ratio_plural"
+        )
+
+        downloads_status = get_text(
+            ratio_key,
+            self.app.current_language
+        ).format(
+            success=success_count,
+            total=total_count
+        )
+
+        # Messagebox d'annulation
+        title = get_text("download_canceled", self.app.current_language)
+        message = (
+            f"{get_text('download_failed', self.app.current_language)}\n\n"
+            f"{downloads_status}"
+        )
+        messagebox.showinfo(title, message)
+
+        # 🔁 Reset visuel IDENTIQUE à la fin normale
+        self.single_progress_bar.set(0)
+        self.single_status_label.configure(
+            text=get_text("ready_status", self.app.current_language)
+        )
+
+        # Reset UI
+        self.download_btn.configure(
+            text="⬇️ " + get_text("download_button", self.app.current_language),
+            command=self.start_download_all,
+            state="normal"
+        )
         self.check_url_btn.configure(state="normal")
-        # facultatif : reset progress bar
-        #self.single_progress_bar.set(0)
 
-        self.single_status_label.configure(text=get_text("canceling_download", self.app.current_language))
-
+        # Nettoyage des états internes
+        self._download_results.clear()
+        self._thread_progress.clear()
+        self._expected_threads = 0
 
     # ----------- callbacks internes pour mise à jour UI -----------
     def _on_thread_progress(self, thread, pct):
         # stocke et calcule la moyenne
-        self._thread_progress[thread] = pct
+
+        if not self.is_downloading:
+            return  # ⛔ ignore les updates après annulation
+
+        self._thread_progress[thread] = pct  # Stocke la progression de chaque thread
         if self._thread_progress:
             avg = sum(self._thread_progress.values()) / len(self._thread_progress)
         else:
             avg = 0
-        self.single_progress_bar.set(avg / 100.0)
+
+        self.single_progress_bar.set(avg / 100.0)  # Calcule la moyenne
 
     def _on_thread_finished(self, thread, success):
+        if not self.is_downloading:
+            return  # ⛔ thread terminé après annulation → on ignore
+
         self._download_results.append(success)
         self._thread_progress[thread] = 100
         self.clear_queue_btn.configure(state="normal" if self.video_frames else "disabled")
@@ -1289,7 +1335,6 @@ class SingleDownloadTab:
                 state="normal"
             )
             self.check_url_btn.configure(state="normal")
-            self.single_progress_bar.set(1)
 
             # Comptage
             success_count = sum(self._download_results)
@@ -1330,10 +1375,16 @@ class SingleDownloadTab:
 
             self.single_status_label.configure(text=title)
 
+            # Après la messagebox
+            self.single_progress_bar.set(0)
+            self.single_status_label.configure(
+                text=get_text("ready_status", self.app.current_language)
+            )
+
             # Reset pour le prochain batch
             self._download_results.clear()
+            self._thread_progress.clear()
             self._expected_threads = 0
-
 
 class LoadingItemFrame(ctk.CTkFrame):
     """Frame temporaire affichée pendant le chargement des infos d'une vidéo."""
