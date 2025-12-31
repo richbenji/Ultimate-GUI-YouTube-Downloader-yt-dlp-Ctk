@@ -272,8 +272,13 @@ class BatchDownloadThread(threading.Thread):
                     self.progress_callback(int(total_pct))
 
                 if self.status_callback:
+                    # Format 3 lignes comme Single
                     fname = d.get('filename', '').split('/')[-1]
-                    self.status_callback(f"{fname} - {d.get('_speed_str', '')} - {d.get('_eta_str', '')}")
+                    self.status_callback(
+                        f"Vidéo {video_index} / {self._total_urls}\n"
+                        f"{video_title or fname}\n"
+                        f"{d.get('_speed_str', '')} - {d.get('_eta_str', '')}"
+                    )
 
             elif status == 'finished':
                 if self.progress_callback:
@@ -352,7 +357,11 @@ class BatchDownloadThread(threading.Thread):
                     ydl_opts = {
                         'format': 'bestaudio[ext=m4a]/bestaudio',
                         'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                        'progress_hooks': [self._progress_hook_factory(base_percent)],
+                        'progress_hooks': [self._progress_hook_factory(
+                            base_percent,
+                            video_index=i+1,  # Passer l'index
+                            video_title=video_title  # Passer le titre
+                            )],
                         'postprocessors': [{
                             'key': 'FFmpegExtractAudio',
                             'preferredcodec': 'mp3',
@@ -365,6 +374,21 @@ class BatchDownloadThread(threading.Thread):
 
                 # ----- Téléchargement -----
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    # Récupérer le titre de la vidéo avant téléchargement
+                    try:
+                        info_dict = ydl.extract_info(url, download=False)
+                        video_title = info_dict.get('title', 'Titre inconnu')
+                    except:
+                        video_title = 'Titre inconnu'
+
+                    # Mettre à jour le statut avec le format 3 lignes
+                    if self.status_callback:
+                        self.status_callback(
+                            f"Vidéo {i + 1} / {self._total_urls}\n"
+                            f"{video_title}\n"
+                            f"{get_text('downloading', self.app.current_language)}..."
+                        )
+
                     ydl.download([url])
 
                 successful += 1
