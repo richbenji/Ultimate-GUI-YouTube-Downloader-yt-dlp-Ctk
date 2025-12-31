@@ -1275,7 +1275,10 @@ class SingleDownloadTab:
         # Messagebox d'annulation
         title = get_text("download_canceled", self.app.current_language)
         message = (
-            f"{get_text('download_failed', self.app.current_language)}\n\n"
+            f"{get_text("download_canceled",  self.app.current_language)
+               + ". " + get_text("partial_download_message",  self.app.current_language)
+               + "."
+            }\n\n"
             f"{downloads_status}"
         )
         messagebox.showinfo(title, message)

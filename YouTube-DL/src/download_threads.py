@@ -247,13 +247,18 @@ class BatchDownloadThread(threading.Thread):
         self.progress_callback = progress_callback
         self.status_callback = status_callback
         self.finished_callback = finished_callback
+
         self.is_cancelled = False
         self.daemon = True
-        self._total_urls = max(1, len(urls))
-        self.total_count = len([u for u in urls if u.strip()])
 
-    # ----- Hook fabriqué pour chaque fichier -----
-    def _progress_hook_factory(self, base_percent):
+        self._total_urls = max(1, len([u for u in urls if u.strip()]))
+        self.total_count = self._total_urls
+
+
+    # ------------------------------------------------------------------
+    # Hook de progression (factory)
+    # ------------------------------------------------------------------
+    def _progress_hook_factory(self, base_percent, video_index, video_title_ref):
         def hook(d):
             if self.is_cancelled:
                 raise DownloadCancelled()
@@ -273,20 +278,23 @@ class BatchDownloadThread(threading.Thread):
 
                 if self.status_callback:
                     # Format 3 lignes comme Single
-                    fname = d.get('filename', '').split('/')[-1]
                     self.status_callback(
                         f"Vidéo {video_index} / {self._total_urls}\n"
-                        f"{video_title or fname}\n"
+                        f"{video_title_ref[0]}\n"
                         f"{d.get('_speed_str', '')} - {d.get('_eta_str', '')}"
                     )
 
             elif status == 'finished':
                 if self.progress_callback:
-                    self.progress_callback(int(base_percent + (100 / self._total_urls)))
+                    self.progress_callback(
+                        int(base_percent + (100 / self._total_urls))
+                    )
 
         return hook
 
-    # ----- Exécution -----
+    # ------------------------------------------------------------------
+    # Exécution principale
+    # ------------------------------------------------------------------
     def run(self):
         successful = 0
 
@@ -299,54 +307,79 @@ class BatchDownloadThread(threading.Thread):
                 if not url:
                     continue
 
-                # Info de progression
+                # Variables pour ce téléchargement
+                video_index = i + 1
+                video_title_ref = ["Chargement..."]
+
+                # Statut initial
                 if self.status_callback:
                     self.status_callback(
-                        f"{get_text('checking_url', self.app.current_language)} ({i+1}/{self._total_urls}) : {url}"
+                        f"{get_text('checking_url', self.app.current_language)} "
+                        f"({video_index}/{self._total_urls})"
                     )
 
                 base_percent = (i * 100) / self._total_urls
 
-                # ----- Construction des options -----
+                # Hook spécifique à cette vidéo
+                progress_hook = self._progress_hook_factory(
+                    base_percent,
+                    video_index,
+                    video_title_ref
+                )
+
+                # --------------------------------------------------
+                # Options yt-dlp
+                # --------------------------------------------------
+
                 if self.download_type == "video":
+
                     # CAS 1 — Best format (comme single tab)
                     if self.resolution == "Best":
                         ydl_opts = {
-                            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
-                            'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                            'progress_hooks': [self._progress_hook_factory(base_percent)],
-                            'quiet': True,
-                            'no_warnings': True,
-                            'merge_output_format': 'mp4',
-                            'nooverwrites': True
+                            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
+                            "outtmpl": os.path.join(
+                                self.output_path, "%(title)s.%(ext)s"
+                            ),
+                            "progress_hooks": [progress_hook],
+                            "quiet": True,
+                            "no_warnings": True,
+                            "merge_output_format": "mp4",
+                            "nooverwrites": True,
                         }
-
 
                     # CAS 2 — Résolution contrôlée
                     else:
-                        height = self.resolution[:-1] if self.resolution.endswith('p') else None
-                        format_str = 'bestvideo[ext=mp4]'
+                        height = (
+                            self.resolution[:-1]
+                            if self.resolution.endswith("p")
+                            else None
+                        )
 
+                        format_str = "bestvideo[ext=mp4]"
                         if height:
-                            format_str = f'bestvideo[height<={height}][ext=mp4]'
+                            format_str = f"bestvideo[height<={height}][ext=mp4]"
 
                         if self.bitrate and self.bitrate != "Best":
-                            bitrate_val = self.bitrate.replace(" kbps", "")
+                            br = self.bitrate.replace(" kbps", "")
                             format_str += (
-                                f'+bestaudio[abr<={bitrate_val}+10]'
-                                f'[abr>={bitrate_val}-10]/bestaudio[ext=m4a]'
+                                f"+bestaudio[abr>={int(br) - 10}]"
+                                f"[abr<={int(br) + 10}][ext=m4a]"
                             )
                         else:
-                            format_str += '+bestaudio[ext=m4a]'
+                            format_str += "+bestaudio[ext=m4a]"
 
                         ydl_opts = {
-                            'format': format_str + '/best',
-                            'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                            'progress_hooks': [self._progress_hook_factory(base_percent)],
-                            'quiet': True,
-                            'no_warnings': True,
-                            'merge_output_format': 'mp4'
+                            "format": format_str + "/best",
+                            "outtmpl": os.path.join(
+                                self.output_path, "%(title)s.%(ext)s"
+                            ),
+                            "progress_hooks": [progress_hook],
+                            "quiet": True,
+                            "no_warnings": True,
+                            "merge_output_format": "mp4",
+                            "nooverwrites": True,
                         }
+
                 else:
                     preferred_quality = (
                         self.bitrate.replace(" kbps", "")
@@ -355,62 +388,76 @@ class BatchDownloadThread(threading.Thread):
                     )
 
                     ydl_opts = {
-                        'format': 'bestaudio[ext=m4a]/bestaudio',
-                        'outtmpl': os.path.join(self.output_path, '%(title)s.%(ext)s'),
-                        'progress_hooks': [self._progress_hook_factory(
-                            base_percent,
-                            video_index=i+1,  # Passer l'index
-                            video_title=video_title  # Passer le titre
-                            )],
-                        'postprocessors': [{
-                            'key': 'FFmpegExtractAudio',
-                            'preferredcodec': 'mp3',
-                            'preferredquality': preferred_quality,
+                        "format": "bestaudio[ext=m4a]/bestaudio",
+                        "outtmpl": os.path.join(
+                            self.output_path, "%(title)s.%(ext)s"
+                        ),
+                        "progress_hooks": [progress_hook],
+                        "postprocessors": [{
+                            "key": "FFmpegExtractAudio",
+                            "preferredcodec": "mp3",
+                            "preferredquality": preferred_quality,
                         }],
-                        'quiet': True,
-                        'no_warnings': True,
-                        'nooverwrites': True
+                        "quiet": True,
+                        "no_warnings": True,
+                        "nooverwrites": True,
                     }
 
-                # ----- Téléchargement -----
+                # --------------------------------------------------
+                # Téléchargement
+                # --------------------------------------------------
+
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     # Récupérer le titre de la vidéo avant téléchargement
                     try:
-                        info_dict = ydl.extract_info(url, download=False)
-                        video_title = info_dict.get('title', 'Titre inconnu')
-                    except:
-                        video_title = 'Titre inconnu'
+                        info = ydl.extract_info(url, download=False)
+                        video_title_ref[0] = info.get("title", "Titre inconnu")
+                    except Exception:
+                        video_title_ref[0] = "Titre inconnu"
 
                     # Mettre à jour le statut avec le format 3 lignes
                     if self.status_callback:
                         self.status_callback(
-                            f"Vidéo {i + 1} / {self._total_urls}\n"
-                            f"{video_title}\n"
+                            f"Vidéo {video_index} / {self._total_urls}\n"
+                            f"{video_title_ref[0]}\n"
                             f"{get_text('downloading', self.app.current_language)}..."
                         )
 
+                    # Maintenant télécharger pour de vrai
                     ydl.download([url])
 
                 successful += 1
 
-            # -- Fin par lot --
+            # --------------------------------------------------
+            # Fin normale
+            # --------------------------------------------------
             if self.status_callback:
-                self.status_callback(get_text("batch_download_complete", self.app.current_language))
+                self.status_callback(
+                    get_text("batch_download_complete", self.app.current_language)
+                )
 
             if self.finished_callback:
                 self.finished_callback(successful, self.total_count)
 
-        # ----- Annulation propre -----
+            # ------------------------------------------------------
+            # Annulation
+            # ------------------------------------------------------
         except DownloadCancelled:
             if self.status_callback:
-                self.status_callback(get_text("canceling_batch_download", self.app.current_language))
+                self.status_callback(
+                    get_text("canceling_batch_download", self.app.current_language)
+                )
             if self.finished_callback:
                 self.finished_callback(successful, self.total_count)
 
-        # ----- Erreurs réelles -----
+            # ------------------------------------------------------
+            # Erreur réelle
+            # ------------------------------------------------------
         except Exception as e:
             if self.status_callback:
-                self.status_callback(f"{get_text('error_prefix', self.app.current_language)} {e}")
+                self.status_callback(
+                    f"{get_text('error_prefix', self.app.current_language)} {e}"
+                )
             if self.finished_callback:
                 self.finished_callback(successful, self.total_count)
 
