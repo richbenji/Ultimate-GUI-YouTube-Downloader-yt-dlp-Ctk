@@ -807,6 +807,7 @@ class SingleDownloadTab:
         # Champ URL
         self.url_input.configure(placeholder_text=get_text("url_placeholder", self.app.current_language))
         self.check_url_btn.configure(text="✔️ " + get_text("check_button", self.app.current_language))
+        self.paste_multi_btn.configure(text="📋 " + get_text("paste_multiple_urls", self.app.current_language))
         self.load_file_btn.configure(text="⬆️ " + get_text("load_from_file_button", self.app.current_language))
 
         # texte du bouton selon l'état
