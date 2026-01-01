@@ -23,11 +23,21 @@ class YouTubeDownloader(ctk.CTk):
 
         # Langues disponibles
         self.available_languages = {
-            "fr": "Français",
+            "ar": "العربية",
+            "br": "Brezhoneg",
+            "de": "Deutsch",
+            "el": "Ελληνικά",
             "en": "English",
             "es": "Español",
+            "fr": "Français",
+            "he": "עברית",
             "it": "Italiano",
-            "de": "Deutsch"
+            "ja": "日本語",
+            "ko": "한국어",
+            "pl": "Polski",
+            "pt": "Português",
+            "ru": "Русский",
+            "zh": "中文"
         }
 
         self.title(get_text("app_title", self.current_language))
