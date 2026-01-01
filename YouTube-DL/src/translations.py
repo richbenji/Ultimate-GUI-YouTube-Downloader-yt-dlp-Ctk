@@ -165,11 +165,17 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         "app_title": "Ultimate GUI YouTube Downloader",
         "app_subtitle": "Etrefas grafikel evit yt-dlp",
+
+        # ──────────────────────────────────────────────────────
         # IVINELLOÙ PENNAÑ
+        # ──────────────────────────────────────────────────────
         "single_download_tab": "Pellgargañ unan",
         "batch_download_tab": "Pellgargañ a-stroll",
         "tutorial": "Sturlevr",
+
+        # ──────────────────────────────────────────────────────
         # BOUTONOÙ HAG OBEREREZHIOÙ
+        # ──────────────────────────────────────────────────────
         "check_button": "Ouzhpennañ",
         "download_button": "Pellgargañ",
         "cancel_button": "Nullañ",
@@ -178,7 +184,10 @@ TRANSLATIONS = {
         "load_from_file_button": "Kargañ diouzh ur restr",
         "paste_multiple_urls": "Pegañ meur a URL",
         "add_urls": "Ouzhpennañ",
+
+        # ──────────────────────────────────────────────────────
         # MAEZIOÙ HA SKRIVELLOÙ
+        # ──────────────────────────────────────────────────────
         "url_placeholder": "Pegit amañ URL YouTube",
         "paste_multiple_urls_hint": "Pegit un URL dre linenn:",
         "type_label": "Seurt:",
