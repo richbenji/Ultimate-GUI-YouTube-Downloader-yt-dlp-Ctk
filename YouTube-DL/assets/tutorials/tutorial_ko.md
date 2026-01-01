@@ -1,4 +1,4 @@
-# 🎓 튜토리얼 — Ultimate YouTube Downloader
+# 🎓 튜토리얼 — GOD (God Offers Downloads)
 
 ## 🚀 소개
 애플리케이션 사용 가이드에 오신 것을 환영합니다! 이 애플리케이션을 사용하면 YouTube 동영상과 재생 목록을 비디오 또는 오디오 형식으로 다운로드할 수 있으며, 비공개 재생 목록도 지원합니다.

@@ -1,5 +1,5 @@
 """
-Fichier de traductions pour Ultimate GUI YouTube Downloader
+Fichier de traductions pour GOD (God Offers Downloads)
 Organisé par catégories logiques
 """
 
@@ -33,8 +33,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # EN-TÊTE APPLICATION
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Une interface graphique pour yt-dlp",
+        "app_title": "GOD\nGod Offers Downloads, Graphical Omnipotent Downloader",
+        "app_subtitle": "Une interface graphique universelle pour le téléchargement de médias, optimisée par yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # ONGLETS PRINCIPAUX
@@ -163,8 +163,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # PENN AR POELLAD
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Etrefas grafikel evit yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Un etrefas grafek hollvedel evit pellgargañ mediaoù, gwellaet gant yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # IVINELLOÙ PENNAÑ
@@ -293,8 +293,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # APPLICATION HEADER
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "A yt-dlp GUI",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "A universal media downloader GUI powered by yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # MAIN TABS
@@ -423,8 +423,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # ENCABEZADO DE APLICACIÓN
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Una interfaz gráfica para yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Una interfaz gráfica de usuario universal para descargar archivos multimedia con tecnología yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # PESTAÑAS PRINCIPALES
@@ -553,8 +553,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # INTESTAZIONE APPLICAZIONE
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Un'interfaccia grafica per yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Un downloader multimediale universale con interfaccia grafica basato su yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # SCHEDE PRINCIPALI
@@ -683,8 +683,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # ANWENDUNGS-KOPFZEILE
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Eine grafische Oberfläche für yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Eine universelle Medien-Downloader-Benutzeroberfläche, die von yt-dlp unterstützt wird",
 
         # ──────────────────────────────────────────────────────
         # HAUPTREGISTERKARTEN
@@ -813,8 +813,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # CABEÇALHO DA APLICAÇÃO
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Uma interface gráfica para yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Uma GUI universal para download de mídia desenvolvida pela yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # ABAS PRINCIPAIS
@@ -943,8 +943,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # כותרת היישום
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Γραφικό περιβάλλον για το yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Ένα καθολικό GUI για λήψη πολυμέσων που υποστηρίζεται από το yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # כרטיסיות ראשיות
@@ -1073,8 +1073,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # ЗАГОЛОВОК ПРИЛОЖЕНИЯ
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Графический интерфейс для yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Универсальный графический интерфейс для загрузки медиафайлов на базе yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # ОСНОВНЫЕ ВКЛАДКИ
@@ -1203,8 +1203,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # アプリケーションヘッダー
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "yt-dlp 用のグラフィカルインターフェース",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "yt-dlpを基盤としたユニバーサルメディアダウンローダーGUI",
 
         # ──────────────────────────────────────────────────────
         # メインタブ
@@ -1333,8 +1333,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # 应用程序标题
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "yt-dlp 的图形界面",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "基于yt-dlp的通用媒体下载器图形界面",
 
         # ──────────────────────────────────────────────────────
         # 主选项卡
@@ -1463,8 +1463,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # 애플리케이션 헤더
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "yt-dlp용 그래픽 인터페이스",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "yt-dlp 기반의 범용 미디어 다운로더 GUI",
 
         # ──────────────────────────────────────────────────────
         # 기본 탭
@@ -1593,8 +1593,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # NAGŁÓWEK APLIKACJI
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "Graficzny interfejs dla yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "Uniwersalny interfejs graficzny do pobierania multimediów oparty na yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # GŁÓWNE ZAKŁADKI
@@ -1724,8 +1724,8 @@ TRANSLATIONS = {
         # ΚΕΦΑΛΙΔΑ ΕΦΑΡΜΟΓΗΣ
         # ──────────────────────────────────────────────────────
 
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "ממשק גרפי עבור yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "ממשק משתמש גרפי להורדת מדיה אוניברסלי המופעל על ידי yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # ΚΥΡΙΕΣ ΚΑΡΤΕΛΕΣ
@@ -1854,8 +1854,8 @@ TRANSLATIONS = {
         # ──────────────────────────────────────────────────────
         # رأس التطبيق
         # ──────────────────────────────────────────────────────
-        "app_title": "Ultimate GUI YouTube Downloader",
-        "app_subtitle": "واجهة رسومية لأداة yt-dlp",
+        "app_title": "GOD (God Offers Downloads, Graphical Omnipotent Downloader)",
+        "app_subtitle": "واجهة مستخدم رسومية عالمية لتنزيل الوسائط مدعومة بواسطة yt-dlp",
 
         # ──────────────────────────────────────────────────────
         # علامات التبويب الرئيسية

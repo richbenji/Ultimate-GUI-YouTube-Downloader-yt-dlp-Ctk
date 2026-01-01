@@ -1,4 +1,4 @@
-# 🎓 Tutorial — Ultimate YouTube Downloader
+# 🎓 Tutorial — GOD (God Offers Downloads)
 
 ## 🚀 Apresentação
 Bem-vindo ao guia de utilização da aplicação! Esta aplicação permite descarregar vídeos e playlists do YouTube em formato de vídeo ou áudio, com suporte para playlists privadas.

@@ -1,4 +1,4 @@
-# 🎓 Tutoriel – Ultimate YouTube Downloader
+# 🎓 Tutoriel – GOD (God Offers Downloads)
 
 ## 🚀 Présentation
 Bienvenue dans le tutoriel d'utilisation de l'application ! Cette application permet de télécharger des vidéos et playlists YouTube en vidéo ou en audio, avec prise en charge des playlists privées.

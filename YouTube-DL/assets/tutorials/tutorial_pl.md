@@ -1,4 +1,4 @@
-# 🎓 Samouczek — Ultimate YouTube Downloader
+# 🎓 Samouczek — GOD (God Offers Downloads)
 
 ## 🚀 Prezentacja
 Witamy w przewodniku użytkownika aplikacji! Ta aplikacja umożliwia pobieranie filmów i playlist YouTube w formacie wideo lub audio, z obsługą prywatnych playlist.

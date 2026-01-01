@@ -1,4 +1,4 @@
-# 🎓 教程 — Ultimate YouTube Downloader
+# 🎓 教程 — GOD (God Offers Downloads)
 
 ## 🚀 简介
 欢迎使用应用程序使用指南!此应用程序允许您以视频或音频格式下载YouTube视频和播放列表,并支持私人播放列表。
