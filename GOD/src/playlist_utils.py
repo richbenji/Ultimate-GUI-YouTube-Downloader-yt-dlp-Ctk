@@ -1,27 +1,21 @@
+from urllib.parse import urlparse
 import yt_dlp
 from .errors import InvalidURLError, VideoInfoFetchError
 
 
+def _is_valid_url(url: str) -> bool:
+    parsed = urlparse(url)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
 def extract_playlist_entries(url, cookies_path=None):
-    """
-    Extrait les vidéos d'une URL YouTube (vidéo unique ou playlist).
 
-    - Gère playlists publiques
-    - Gère playlists privées via cookies.txt
-    - Distingue playlist privée / erreur réelle
-
-    Retourne une liste de dicts :
-    [
-        {"url": "...", "title": "...", "index": ...},
-        ...
-    ]
-    """
-
-    # Validation basique
     if not url or not isinstance(url, str) or not url.strip():
         raise InvalidURLError()
 
-    # 🔹 BASE OPTIONS
+    if not _is_valid_url(url):
+        raise InvalidURLError()
+
     base_opts = {
         "quiet": True,
         "skip_download": True,
@@ -29,16 +23,12 @@ def extract_playlist_entries(url, cookies_path=None):
         "ignoreerrors": False,
     }
 
-    # 🔹 STRATÉGIES D’AUTHENTIFICATION (dans l’ordre)
     strategies = [
-        # 1️⃣ Automatique : navigateur
         {
             **base_opts,
             "extract_flat": True,
             "cookiesfrombrowser": ("firefox",),
         },
-
-        # 2️⃣ Manuel : cookies.txt
         {
             **base_opts,
             "extract_flat": False,
@@ -54,11 +44,9 @@ def extract_playlist_entries(url, cookies_path=None):
             if not info:
                 continue
 
-            # 🎥 Vidéo unique
             if info.get("_type") != "playlist":
                 title = info.get("title")
                 video_url = info.get("webpage_url")
-
                 if not title or not video_url:
                     continue
 
@@ -68,9 +56,7 @@ def extract_playlist_entries(url, cookies_path=None):
                     "index": 1
                 }]
 
-            # 📋 Playlist
             raw_entries = info.get("entries")
-
             if not raw_entries:
                 continue
 
@@ -80,8 +66,7 @@ def extract_playlist_entries(url, cookies_path=None):
                     continue
 
                 video_id = entry.get("id")
-                title = entry.get("title") or f"Vidéo {idx}"
-
+                title = entry.get("title") or f"Video {idx}"
                 if not video_id:
                     continue
 
@@ -94,27 +79,10 @@ def extract_playlist_entries(url, cookies_path=None):
             if entries:
                 return entries
 
-        except Exception:
-            # On tente la stratégie suivante
+        except Exception as e:
+            msg = str(e).lower()
+            if any(k in msg for k in ("private", "sign in", "login", "cookies")):
+                raise VideoInfoFetchError("playlist_private")
             continue
 
-    # ❌ Aucune stratégie n’a fonctionné
-    raise VideoInfoFetchError("playlist_private")
-
-def is_playlist_url(url):
-    """
-    Détecte si une URL est une playlist YouTube.
-
-    Returns:
-        bool: True si c'est une playlist, False sinon
-    """
-    if not url:
-        return False
-
-    playlist_indicators = [
-        "playlist?list=",
-        "&list=",
-        "/playlist?",
-    ]
-
-    return any(indicator in url.lower() for indicator in playlist_indicators)
+    raise VideoInfoFetchError("fetching_impossible")
