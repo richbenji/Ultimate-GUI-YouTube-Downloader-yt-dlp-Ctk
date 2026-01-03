@@ -52,7 +52,7 @@ def load_custom_font(font_relative_path, size=28, weight="bold", fallback=("Aria
 # IMAGES
 # --------------------------------------------------
 
-def load_logo_image(image_relative_path, size=(80, 60)):
+def load_logo_image(image_relative_path, size=(80, 80)):
     """
     Charge une image (logo, icône…) compatible PyInstaller.
     """

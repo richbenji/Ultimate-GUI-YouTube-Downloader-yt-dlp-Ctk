@@ -143,7 +143,7 @@ class YouTubeDownloader(ctk.CTk):
         self.subtitle_label_main.pack(expand=True)
 
         # === Colonne droite : logo ===
-        logo_image = load_logo_image("assets/Youtube_logo.png")
+        logo_image = load_logo_image("assets/logos/GOD.png")
         if logo_image:
             logo_label = ctk.CTkLabel(header_frame, image=logo_image, text="")
             logo_label.grid(row=0, column=2, sticky="nse", padx=10, pady=10)
