@@ -38,7 +38,8 @@ a = Analysis(
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
-    noarchive=False,
+    optimize=0,
+    noarchive=True,
 )
 
 exe = EXE(
