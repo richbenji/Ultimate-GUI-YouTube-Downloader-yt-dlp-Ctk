@@ -38,9 +38,14 @@ a = Analysis(
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
-    optimize=0,
-    noarchive=True,
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=None,
+    #optimize=0,
+    #noarchive=False,
 )
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 exe = EXE(
     a.pure,
@@ -52,3 +57,12 @@ exe = EXE(
     console=False,
     icon=icon_file,
 )
+
+# Pour macOS uniquement
+if IS_MAC:
+    app = BUNDLE(
+        exe,
+        name='GOD.app',
+        icon=icon_file,
+        bundle_identifier='com.yourname.god',
+    )
