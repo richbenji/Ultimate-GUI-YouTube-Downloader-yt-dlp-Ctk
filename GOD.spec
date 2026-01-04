@@ -1,77 +1,70 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
 import os
-from PyInstaller.utils.hooks import collect_data_files
+
+block_cipher = None
 
 IS_WINDOWS = sys.platform.startswith("win")
-IS_MAC = sys.platform == "darwin")
-IS_LINUX = sys.platform.startswith("linux")
+IS_MAC = sys.platform == "darwin"
 
 if IS_WINDOWS:
-    icon_file = os.path.join("GOD", "assets", "logos", "GOD.ico")
+    icon_file = "GOD/assets/logos/GOD.ico"
 elif IS_MAC:
-    icon_file = os.path.join("GOD", "assets", "logos", "GOD.icns")
+    icon_file = "GOD/assets/logos/GOD.icns"
 else:
-    icon_file = os.path.join("GOD", "assets", "logos", "GOD.png")
-
-datas = (
-    collect_data_files("PIL")
-    + [
-        ("GOD/assets", "assets"),
-        ("GOD/fonts", "fonts"),
-    ]
-)
+    icon_file = "GOD/assets/logos/GOD.png"
 
 a = Analysis(
-    ["GOD/main.py"],
-    pathex=["GOD"],
+    ['GOD/main.py'],
+    pathex=['GOD'],
     binaries=[],
-    datas=datas,
+    datas=[
+        ('GOD/assets', 'assets'),
+        ('GOD/fonts', 'fonts'),
+    ],
     hiddenimports=[
-        "PIL.Image",
-        "PIL.ImageTk",
-        "PIL._tkinter_finder",
-        "tkinter",
-        "tkinter.filedialog",
-        # Ajout pour yt-dlp
-        "yt_dlp",
-        "yt_dlp.extractor",
-        "customtkinter",
+        'PIL.Image',
+        'PIL.ImageTk',
+        'PIL._tkinter_finder',
+        'tkinter',
+        'tkinter.filedialog',
+        'customtkinter',
+        'yt_dlp',
     ],
     hookspath=[],
+    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=None,
+    cipher=block_cipher,
+    noarchive=False,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=None)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
-    pyz,  # 👈 CORRECTION ICI : utilise pyz au lieu de a.pure
+    pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,  # 👈 AJOUT
+    a.zipfiles,
     a.datas,
     [],
-    name="GOD",
+    name='GOD',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # False pour GUI, True pour debug
+    console=False,
     disable_windowed_traceback=False,
-    argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
     icon=icon_file,
 )
 
-# Pour macOS uniquement
 if IS_MAC:
     app = BUNDLE(
         exe,
