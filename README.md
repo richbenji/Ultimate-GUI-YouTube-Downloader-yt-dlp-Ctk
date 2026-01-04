@@ -1,4 +1,5 @@
-# GOD  
+# GOD - God Offers Downloads, Graphical Omnipotent Downloader
+
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md) [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)](https://github.com/TON_USERNAME/GOD)
 
 A universal media downloader with a modern Python GUI, powered by **yt-dlp**.
@@ -8,6 +9,10 @@ Download media from YouTube, Instagram, Facebook...
 ------
 
 ![](GOD/assets/images/GOD_main_view.png)
+
+[TOC]
+
+------
 
 ## 🧠 About the Name
 
