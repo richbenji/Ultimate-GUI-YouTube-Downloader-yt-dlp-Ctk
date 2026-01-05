@@ -12,7 +12,7 @@ if IS_WINDOWS:
 elif IS_MAC:
     icon_file = "GOD/assets/logos/GOD.icns"
 else:
-    icon_file = "GOD/assets/logos/GOD.png"
+    icon_file = "GOD/assets/logos/GOD_512x512.png"
 
 a = Analysis(
     ['GOD/main.py'],
