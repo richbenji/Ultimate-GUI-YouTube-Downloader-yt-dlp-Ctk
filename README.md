@@ -136,6 +136,40 @@ python GOD/main.py
 # Double-click GOD.exe to launch
 ```
 
+#### 🛡️ Windows Antivirus Notice
+
+On Windows, the executable may be blocked by antivirus software
+(Windows Defender, Avast, etc.).
+
+This is a **false positive** and is a common issue with:
+- unsigned executables
+- PyInstaller-built applications
+- open-source tools distributed outside official app stores
+
+##### Why does this happen?
+
+GOD is:
+- open-source
+- not digitally signed (code signing certificates are expensive)
+- built using PyInstaller (often flagged by heuristics)
+
+##### What can I do?
+
+You can safely:
+1. Restore the file from your antivirus quarantine
+2. Add an exception for `GOD.exe`
+3. Allow the application when prompted by Windows Defender / SmartScreen
+
+If you prefer, you can also:
+- inspect the source code
+- build the executable yourself from the repository
+
+No malicious behavior is present in the application.
+
+##### 🔒 Security & Transparency
+
+GOD is fully open-source. You can review the code or build the executable yourself. If you downloaded the binary from GitHub Releases, it was built automatically using GitHub Actions.
+
 **Method 2: From source**
 
 ```powershell
