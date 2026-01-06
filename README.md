@@ -92,6 +92,23 @@ choco install ffmpeg
 
 🧳 GOD is designed to be packaged as a portable application (e.g. AppImage on Linux, standalone executable on Windows), allowing users to run it without installing Python or virtual environments.
 
+### 🔐 Verify integrity (optional)
+
+To verify the downloaded file:
+
+**Linux**
+
+```bash
+sha256sum GOD-x86_64.AppImage
+```
+
+**Windows**
+```powershell
+certutil -hashfile GOD.exe SHA256
+```
+
+Compare the result with the SHA256 checksum published in the release. It must me the same.
+
 ### 🐧 Linux (Recommended: AppImage)
 
 **Method 1: AppImage (no installation required)**

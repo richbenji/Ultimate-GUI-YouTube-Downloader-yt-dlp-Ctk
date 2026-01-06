@@ -1181,7 +1181,7 @@ class SingleDownloadTab:
             command=self.cancel_downloads,
             state="normal"
         )
-        self.check_url_btn.configure(state="disabled")
+        #self.check_url_btn.configure(state="disabled")
 
         self.clear_queue_btn.configure(state="disabled")
 
